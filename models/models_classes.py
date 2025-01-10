@@ -2,7 +2,7 @@ import os
 os.chdir('..')
 from modules import *
 from functions.tools import *
-os.chdir('./KerCovEmb')
+os.chdir('./CKE')
 
 # ------------------------ # ------------------------ #
 
