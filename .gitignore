@@ -1,2 +1,5 @@
 .venv/
 datasets/
+snippets.ipynb
+plot_results.ipynb
+MNIST.ipynb
