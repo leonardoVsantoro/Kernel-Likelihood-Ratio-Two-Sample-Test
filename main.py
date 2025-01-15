@@ -5,6 +5,7 @@ import models.models_classes as models
 from functions.run import *
 
 
+# --------- set parameters
 
 NUM_CORES = 8
 
@@ -17,6 +18,8 @@ N_iters = 100
 kappa_K = 1e5
 
 test_names = ['FH', 'MMD', 'KNN', 'FR']
+
+# --------- select model
 
 # _model_ = models.isotropic_different_means
 # model_params = {'mu' : 1.15, 'numDiffLocs' :  1000}
@@ -37,7 +40,7 @@ model_params = {'mu' : 1.25, 'numDiffLocs' :  50}
 kernel_name = 'default'
 kernel_bandwith = None
 
-# --------- do not touch below this line
+# --------- do modify below this line
 
 def run_parallel(n, d, _model_, model_params, test_names, kernel_name, kernel_bandwith,  kappa_K, num_permutations, N_iters):
     iter_args = [(n, d, _model_,model_params, test_names, kernel_name, kernel_bandwith, kappa_K, num_permutations) for _ in range(N_iters)]
