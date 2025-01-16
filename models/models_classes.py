@@ -120,6 +120,40 @@ def isotropic_different_means(mu, numDiffLocs = None):
     return themodel
 
 
+
+def same_mean_different_covs(getcovX,getcovY, numDiffLocs = None):
+    class themodel:
+        def __init__(self, d, numDiffLocs = numDiffLocs):
+
+            if numDiffLocs is None or numDiffLocs > d:
+                numDiffLocs = d 
+            
+            self.name = 'same_mean_different_covs'
+            self.params = {'covX': getcovX.name,'covX': getcovY.name}
+
+            self.d = d
+
+            self.mX = np.zeros(d) 
+            self.mY = np.zeros(d)
+            self.m_null = np.zeros(d)
+
+            
+            self.covX = getcovX.cov(d)
+            self.covY =  getcovX.cov(d)
+
+            self.cov_null = geodesic_midpoint(self.covX, self.covY)
+
+        def sample_X(self,n):
+            return np.random.multivariate_normal(self.mX, self.covX, n)
+        def sample_Y(self,n):
+            return np.random.multivariate_normal(self.mY, self.covY, n)
+        def sample_null(self,n):
+            return np.random.multivariate_normal(self.m_null, self.cov_null, n)
+    return themodel
+
+
+
+
         
 # class isotropic_vs_offDiagSpiked:
 #     def __init__(self, d): 
@@ -162,7 +196,7 @@ def isotropic_different_means(mu, numDiffLocs = None):
 
 
 
-# class MODEL_modal_vs_bimodal_gaussian:
+# class unimodal_vs_bimodal_gaussian:
 #     def __init__(self, d, get_params): 
 #         self.d = d
 #         self.mX, self.covX, self.mY_0, self.mY_1, self.covY_0, self.covY_1, self.p  = get_params(d)
