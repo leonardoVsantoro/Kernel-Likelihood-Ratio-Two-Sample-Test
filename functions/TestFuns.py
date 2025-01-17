@@ -107,7 +107,7 @@ class CKE_two_sample_test:
             _KX, _KX_ED, _KY, _KY_ED = get_Kmats_X_Y(_kxx, _kxy, _kyy, self.kappa_K)
             permuted_stats.append(CovKerEmb_test_stat(self.test_name, _KX, _KY, _KX_ED, _KY_ED))
 
-        p_value = np.mean(permuted_stats > self.obs_value)
+        p_value = float(np.mean(permuted_stats > self.obs_value))
 
         if not return_stats:
             return p_value
@@ -191,7 +191,7 @@ class MMD_two_sample_test:
             reordered_kernel = self.kernel_matrix[permuted_indices][:, permuted_indices]
             _value = mmd_from_kernel(reordered_kernel, n, m)
             permuted_stats.append(_value)
-        p_value = np.mean(np.array(permuted_stats) >= self.obs_value)
+        p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
         if not return_stats:
             return p_value
         else:
@@ -254,7 +254,7 @@ class KNN_two_sample_test:
                 permuted_count += sum(permuted_labels[i] == permuted_labels[neighbors])
             permuted_stats.append(permuted_count / (self.k * (n + m)))
         permuted_stats = np.array(permuted_stats)
-        p_value = np.mean(np.array(permuted_stats) >= self.obs_value)
+        p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
         if not return_stats:
             return p_value
         else:
@@ -316,7 +316,7 @@ class FR_two_sample_test:
                     permuted_runs_count += 1
             permuted_stats.append(permuted_runs_count)
         permuted_stats = np.array(permuted_stats)
-        p_value = np.mean(permuted_stats <= self.obs_value) # reversed here!
+        p_value = float(np.mean(permuted_stats <= self.obs_value)) # reversed here!
         if not return_stats:
             return p_value
         else:
@@ -389,7 +389,7 @@ class MPZ_two_sample_test:
             _Y = self.Z[permuted_indices[n:]]
             permuted_stats.append( mpz_test_stat(_X,_Y))
 
-        p_value = np.mean(np.array(permuted_stats) >= self.obs_value)
+        p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
         if not return_stats:
             return p_value
         else:

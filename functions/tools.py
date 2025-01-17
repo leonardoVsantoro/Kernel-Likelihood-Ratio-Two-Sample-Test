@@ -165,6 +165,12 @@ def spiked_covariance(d, num_spikes=1, spike_value=10, template_cov=None):
         cov_matrix[i, i] = spike_value
     return cov_matrix
 
+from sklearn.gaussian_process.kernels import Matern
+def matern_cov(d,nu): 
+    matern_grid = np.array([ (
+            np.linspace(0,1,d).ravel()[:, np.newaxis], 
+            np.linspace(0,1,d).ravel()[:, np.newaxis]) ])[0].T.reshape(-1,2)
+    return Matern(nu=nu)(matern_grid)
 
 def BM_cov(d): 
     grid = np.linspace(0,1,d)

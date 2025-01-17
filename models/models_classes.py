@@ -129,7 +129,7 @@ def same_mean_different_covs(getcovX,getcovY, numDiffLocs = None):
                 numDiffLocs = d 
             
             self.name = 'same_mean_different_covs'
-            self.params = {'covX': getcovX.name,'covX': getcovY.name}
+            self.params = {'covX': getcovX().name,'covX': getcovY().name}
 
             self.d = d
 
@@ -138,8 +138,8 @@ def same_mean_different_covs(getcovX,getcovY, numDiffLocs = None):
             self.m_null = np.zeros(d)
 
             
-            self.covX = getcovX.cov(d)
-            self.covY =  getcovX.cov(d)
+            self.covX = getcovX()(d)
+            self.covY =  getcovY()(d)
 
             self.cov_null = geodesic_midpoint(self.covX, self.covY)
 
@@ -150,97 +150,4 @@ def same_mean_different_covs(getcovX,getcovY, numDiffLocs = None):
         def sample_null(self,n):
             return np.random.multivariate_normal(self.m_null, self.cov_null, n)
     return themodel
-
-
-
-
-        
-# class isotropic_vs_offDiagSpiked:
-#     def __init__(self, d): 
-#         self.name = 'diagSpiked_vs_offDiagSpiked'
-#         self.d = d
-#         self.mX = np.zeros(d); 
-#         self.mY = np.zeros(d)
-
-#         num_spikes = d//2
-#         self.covX = np.eye(d)
-#         self.covY = spiked_covariance_off_diag(d, num_spikes=num_spikes, spike_value=10)
-
-#         self.m_null = .5*(self.mX + self.mY)
-#         self.cov_null =  geodesic_midpoint( self.covX ,  self.covY)
-#     def sample_X(self,n):
-#         return np.random.multivariate_normal(self.mX, self.covX, n)
-#     def sample_Y(self,n):
-#         return np.random.multivariate_normal(self.mY, self.covY, n)
-#     def sample_null(self,n):
-#         return np.random.multivariate_normal(self.m_null, self.cov_null, n)
-# class diagSpiked_vs_offDiagSpiked:
-#     def __init__(self, d): 
-#         self.name = 'diagSpiked_vs_offDiagSpiked'
-#         self.d = d
-#         self.mX = np.zeros(d); 
-#         self.mY = np.zeros(d)
-
-#         num_spikes = d//2
-#         self.covX = spiked_covariance(d, num_spikes=num_spikes, spike_value=10)
-#         self.covY = spiked_covariance_off_diag(d, num_spikes=num_spikes, spike_value=10)
-
-#         self.m_null = .5*(self.mX + self.mY)
-#         self.cov_null =  geodesic_midpoint( self.covX ,  self.covY)
-#     def sample_X(self,n):
-#         return np.random.multivariate_normal(self.mX, self.covX, n)
-#     def sample_Y(self,n):
-#         return np.random.multivariate_normal(self.mY, self.covY, n)
-#     def sample_null(self,n):
-#         return np.random.multivariate_normal(self.m_null, self.cov_null, n)
-
-
-
-# class unimodal_vs_bimodal_gaussian:
-#     def __init__(self, d, get_params): 
-#         self.d = d
-#         self.mX, self.covX, self.mY_0, self.mY_1, self.covY_0, self.covY_1, self.p  = get_params(d)
-#         self.m_null_0 = .5*(self.mX + self.mY_0)
-#         self.m_null_1 = .5*(self.mX + self.mY_1)
-#         self.cov_null_0 = geodesic_midpoint(self.covX, self.covY_0)
-#         self.cov_null_1 = geodesic_midpoint(self.covX, self.covY_1)
-  
-#     def sample_X(self,n):
-#         return np.random.multivariate_normal(self.mX, self.covX, n)
-    
-#     def sample_Y(self,n):
-#         k = np.random.binomial(n, self.p)
-#         return np.vstack((np.random.multivariate_normal(self.mY_0, self.covY_0, k), 
-#                           np.random.multivariate_normal(self.mY_1, self.covY_1, n-k)))
-#     def sample_null(self,n):
-#         # k1 = np.random.binomial(n, .5)
-#         # k2 = np.random.binomial(n-k1, self.p)
-#         # return np.vstack((np.random.multivariate_normal(self.m0, self.cov0, k1), 
-#         #                   np.random.multivariate_normal(self.m1_0, self.cov1_0, k2),
-#         #                   np.random.multivariate_normal(self.m1_1, self.cov1_1, n-k1-k2)))
-#         k = np.random.binomial(n, self.p)
-#         return np.concatenate((         np.random.multivariate_normal(self.m_null_0, self.cov_null_0, k), 
-#                                         np.random.multivariate_normal(self.m_null_1, self.cov_null_1, n-k)), axis=0)
-    
-
-# class MODEL_twoGaussians:
-#     def __init__(self, d, get_params): 
-#         mX,mY,covX,covY = get_params(d) 
-#         self.d = d
-#         self.mX = mX
-#         self.covX = covX
-
-#         self.mY = mY
-#         self.covY = covY
-
-#         self.m_null = .5*(mX + mY)
-#         self.cov_null =  geodesic_midpoint(covX, covY)
-
-
-#     def sample_X(self,n):
-#         return np.random.multivariate_normal(self.mX, self.covX, n)
-#     def sample_Y(self,n):
-#         return np.random.multivariate_normal(self.mY, self.covY, n)
-#     def sample_null(self,n):
-#         return np.random.multivariate_normal(self.m_null, self.cov_null, n)
 
