@@ -65,7 +65,7 @@ class CKE_two_sample_test:
     __call__: Perform the permutation test and return the p-value.
     """
 
-    def __init__(self, X, Y, test_name = 'FH', kappa_K=1e-5, kernel=None):
+    def __init__(self, X, Y, test_name = 'FH', kappa_K=1e4, kernel=None):
         """
         Initialize the test class.
         """
@@ -411,7 +411,7 @@ class MPZ_two_sample_test:
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
 
-def hall_tajvidi_test_stat(X, Y, k=1):
+def hall_tajvidi_test_stat(X, Y, k=10):
     """
     Perform the Hall and Tajvidi nearest-neighbor test for equality of distributions.
     
@@ -477,7 +477,8 @@ class HT_two_sample_test:
         """
         self.X = X; self.Y = Y
         self.k = k
-        self.Z = np.vstack([X, Y]) - np.vstack([X, Y]).mean(0)
+        # self.Z = np.vstack([X, Y]) - np.vstack([X, Y]).mean(0)        
+        self.Z = np.vstack([X, Y])
         self.obs_value = hall_tajvidi_test_stat(X,Y,k)
 
     def __call__(self, num_permutations=100, return_stats=False):
@@ -501,7 +502,7 @@ class HT_two_sample_test:
             _Y = self.Z[permuted_indices[n:]]
             permuted_stats.append( hall_tajvidi_test_stat(_X,_Y,self.k))
 
-        p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
+        p_value = float(np.mean(np.array(permuted_stats) <= self.obs_value)) #reversed here!
         if not return_stats:
             return p_value
         else:

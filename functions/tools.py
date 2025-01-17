@@ -200,16 +200,28 @@ def compound_symmetry_covariance(d, sigma2, tau2):
 def ar1_covariance(d, rho):
     return toeplitz_covariance(d, rho)
 
-    # if bootstrap_type == '2centred':
-    #     cov_X = np.cov(X.T) + np.eye(X.shape[1])*1e-5
-    #     cov_Y = np.cov(Y.T) + np.eye(X.shape[1])*1e-5
-    #     cov_null = geodesic_midpoint(cov_X, cov_Y)
-    #     mu_X = X.mean(0)
-    #     mu_Y = Y.mean(0)
-    #     mu_null = .5*(mu_X + mu_Y)
-    #     invsqrtCOV_X = np.linalg.inv(sqrtm(cov_X))
-    #     invsqrtCOV_Y = np.linalg.inv(sqrtm(cov_Y))
-    #     return np.concatenate([(sqrtm(cov_null)@invsqrtCOV_X@(X-mu_X).T).T, (sqrtm(cov_null)@invsqrtCOV_Y@(Y-mu_Y).T).T], axis = 0)+ mu_null
+
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+class getBBcov:
+    def __init__(self):
+        self.name = 'BB'
+    def __call__(self,d):
+        return BB_cov(d) 
+    
+class getBMcov:
+    def __init__(self):
+        self.name = 'BM'
+    def __call__(self,d):
+        return BM_cov(d) 
+        
+def getMaterncov(nu):
+    class theclass:
+        def __init__(self):
+            self.name = 'Matern, nu = {}'.format(nu)
+        def __call__(self,d):
+            return matern_cov(d,nu) 
+    return theclass
+    
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
 def get_kernel(kernel_name,sigma=1):

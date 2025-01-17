@@ -13,3 +13,4 @@ from joblib import Parallel, delayed # type: ignore
 from sklearn.neighbors import NearestNeighbors # type: ignore
 from scipy.spatial import distance_matrix # type: ignore
 from scipy.sparse.csgraph import minimum_spanning_tree# type: ignore
+from scipy.spatial import distance# type: ignore
