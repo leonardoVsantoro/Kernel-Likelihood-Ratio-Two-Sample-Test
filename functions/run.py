@@ -59,6 +59,8 @@ def run_iteration(n, d, _model_, model_params, test_names, kernel_name, kernel_b
         pvals.update({'KNN' : KNN_two_sample_test(X, Y, k=1)(num_permutations)})
     if 'FR' in test_names:
         pvals.update({'FR' : FR_two_sample_test(X, Y)(num_permutations)})
+    if 'HT' in test_names:
+        pvals.update({'HT' : HT_two_sample_test(X, Y, k=10)(num_permutations)})
     if 'MMD' in test_names:
         pvals.update({'MMD' : MMD_two_sample_test(X, Y, kernel_name, kernel_bandwith)(num_permutations)})
     if 'MPZ' in test_names:

@@ -12,21 +12,6 @@ from matplotlib import pyplot as plt # type: ignore
 from matplotlib.ticker import ScalarFormatter # type: ignore
 import seaborn as sns # type: ignore
 
-# import torch# type: ignore
-# import subprocess# type: ignore
-# def run_terminal_command(command):
-#     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     stdout, stderr = process.communicate()
-#     if process.returncode != 0:
-#         print(f"Error: {stderr.decode('utf-8')}")
-#     else:
-#         print(stdout.decode('utf-8'))
-
-# run_terminal_command('pip install git+https://github.com/josipd/torch-two-sample.git')
-
-# from torch_two_sample.statistics_nondiff import FRStatistic, KNNStatistic  # type: ignore
-# from torch_two_sample.statistics_diff import MMDStatistic # type: ignore
-
 
 def sample_test_vals(sample_X, sample_Y, n, test_names, kappa_K = 1e6, kernel = None ):
     X = sample_X(n)
@@ -52,11 +37,6 @@ def sample_test_vals(sample_X, sample_Y, n, test_names, kappa_K = 1e6, kernel = 
             values.append(CovKerEmb_test_stat(test_name, KX, KY, KX_ED, KY_ED))
         if test_name == 'MMD':
             values.append(MMD_two_sample_test(X,Y).obs_value)
-        # if test_name == 'torchMMD':
-        #     _stat = MMDStatistic(n,n) # type: ignore
-        #     X_torch = torch.autograd.Variable(torch.tensor(X, dtype=torch.float32)) # type: ignore
-        #     Y_torch = torch.autograd.Variable(torch.tensor(Y, dtype=torch.float32)) # type: ignore
-        #     values.append(_stat(X_torch, Y_torch, [1e-2]).item())
         if test_name == 'KNN':
             values.append(KNN_two_sample_test(X,Y).obs_value)
         if test_name == 'FR':
@@ -71,12 +51,10 @@ def H0_H1(n,d, _model_,test_names, kappa_K, num_reps, kernel = None, NUM_CORES=4
     # sample from null 
     iter_args = [(_model_(d).sample_X, _model_(d).sample_X, n, test_names, kappa_K, kernel) for _ in range(num_reps)]
     null_vals = Parallel(n_jobs=NUM_CORES)(delayed(sample_test_vals)(*args) for args in iter_args)
-    # null_vals = {test_name : np.array(null_vals)[:,i] for i, test_name in enumerate(test_names)}
 
     # sample from alternative 
     iter_args = [(_model_(d).sample_X, _model_(d).sample_Y, n, test_names, kappa_K, kernel) for _ in range(num_reps)]
     alternative_vals = Parallel(n_jobs=NUM_CORES)(delayed(sample_test_vals)(*args) for args in iter_args)
-    # alternative_vals = {test_name : np.array(alternative_vals)[:,i] for i, test_name in enumerate(test_names)}
 
     return null_vals, alternative_vals
 

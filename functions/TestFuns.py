@@ -264,7 +264,9 @@ class KNN_two_sample_test:
 
 class FR_two_sample_test:
     """
-    Two-sample FR test to determine if two samples come from the same distribution.
+    Two-sample FR Smirnov test to determine if two samples come from the same distribution.
+    Generalises the Kolmogorov-Smirnov test to the multivariate setting.
+    Based on [Friedman and Rafsky, '79]
 
     Arguments:
     X (ndarray): First sample (n x d).
@@ -324,6 +326,17 @@ class FR_two_sample_test:
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 def mpz_test_stat(X, Y, center = True):
+    """
+    Perform the Masarotto-Panaretos-Zemel for equality of (centered) distributions.
+    
+    Parameters:
+    X (np.ndarray): Sample from the first distribution, shape (n, d).
+    Y (np.ndarray): Sample from the second distribution, shape (m, d).
+    center (bool): If True, center the samples before computing the test statistic.
+    
+    Returns:
+    float: Test statistic
+    """
     if center:
         X = X - X.mean(0)
         Y = Y - Y.mean(0)
@@ -354,7 +367,7 @@ class MPZ_two_sample_test:
     reg (float): Regularization parameter for the covariance matrices, default 1e-5
 
     Attributes:
-    obs_value (float): Observed MMD statistic value.
+    obs_value (float): Observed statistic value.
 
     Methods:
     __call__: Perform the permutation test and return the p-value.
@@ -395,25 +408,101 @@ class MPZ_two_sample_test:
         else:
             return permuted_stats, p_value
 
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
 
-# def swap_tet_stat(cov1, cov2):
-#     """
-#     Simulates the Swap Test for two covariance matrices.
+def hall_tajvidi_test_stat(X, Y, k=1):
+    """
+    Perform the Hall and Tajvidi nearest-neighbor test for equality of distributions.
     
-#     Parameters:
-#         cov1 (np.ndarray): First covariance matrix (positive semi-definite, unit trace).
-#         cov2 (np.ndarray): Second covariance matrix (positive semi-definite, unit trace).
-    
-#     Returns:
-#         float: Probability of measuring the auxiliary qubit in the |0> state.
-#     """
-#     cov1 /= np.trace(cov1)
-#     cov2 /= np.trace(cov2)
+    Parameters:
+    X (np.ndarray): Sample from the first distribution, shape (n, d).
+    Y (np.ndarray): Sample from the second distribution, shape (m, d).
+    k (int): Number of nearest neighbors to consider (default is 1).
 
-#     # Compute the overlap Tr(cov1 * cov2)
-#     overlap = np.trace(np.dot(cov1, cov2))
-#     # Compute the probability of measuring the auxiliary qubit in the |0> state
-#     probability_0 = (1 + overlap) / 2
+    Returns:
+    float: Test statistic (fraction of nearest neighbors from the opposite sample).
+    """
+    # Combine both samples and label them
+    Z = np.vstack([X, Y])  # Combined dataset
+    n, d = X.shape
+    m = Y.shape[0]
+    labels = np.array([0] * n + [1] * m)  # 0 for X, 1 for Y
     
-#     return probability_0
+    # Compute pairwise distances
+    distances = distance.cdist(Z, Z)  # Pairwise distances between all points
+    
+    # Initialize count for nearest neighbors from the opposite sample
+    count = 0
+    
+    for i in range(len(Z)):
+        # Get sorted indices of distances for point i, excluding itself
+        sorted_indices = np.argsort(distances[i])
+        sorted_indices = sorted_indices[sorted_indices != i]  # Exclude itself
+        
+        # Find the k nearest neighbors
+        nearest_labels = labels[sorted_indices[:k]]
+        
+        # Count how many of these neighbors belong to the opposite class
+        if labels[i] == 0:  # Point is from X
+            count += np.sum(nearest_labels == 1)
+        else:  # Point is from Y
+            count += np.sum(nearest_labels == 0)
+    
+    # Normalize the count to get the test statistic
+    test_stat = count / (k * len(Z))
+    
+    return test_stat
+
+class HT_two_sample_test:
+    """
+    Two-sample Hall and Tajvidi nearest-neighbor test for equality of distributions.
+    Based on [ Hall and Tajvidi, '02]
+
+    Arguments:
+    X (ndarray): First sample (n x d).
+    Y (ndarray): Second sample (m x d)
+    k (int): Number of nearest neighbors to consider (default is 10).
+
+    Attributes:
+    obs_value (float): Observed statistic value.
+
+    Methods:
+    __call__: Perform the permutation test and return the p-value.
+    """
+
+    def __init__(self, X, Y, k = 10):
+        """
+        Initialize the test class.
+        """
+        self.X = X; self.Y = Y
+        self.k = k
+        self.Z = np.vstack([X, Y]) - np.vstack([X, Y]).mean(0)
+        self.obs_value = hall_tajvidi_test_stat(X,Y,k)
+
+    def __call__(self, num_permutations=100, return_stats=False):
+        """
+        Perform the permutation test and return the p-value.
+
+        Parameters:
+        num_permutations (int): Number of permutations for calibrating the test.
+        return_stats (bool): If True, return the permuted statistics as well.
+
+        Returns:
+        float: p-value of the test.
+        tuple: (permuted_stats, p_value) if return_stats is True.
+        """
+        n = len(self.X); m = len(self.Y)
+        d = self.X.shape[1]
+        permuted_stats = []
+        for _ in range(num_permutations):
+            permuted_indices = np.random.permutation(n + m)
+            _X = self.Z[permuted_indices[:n]]
+            _Y = self.Z[permuted_indices[n:]]
+            permuted_stats.append( hall_tajvidi_test_stat(_X,_Y,self.k))
+
+        p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
+        if not return_stats:
+            return p_value
+        else:
+            return permuted_stats, p_value
