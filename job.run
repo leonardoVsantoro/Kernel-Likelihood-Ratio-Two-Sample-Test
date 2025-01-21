@@ -1,0 +1,23 @@
+#!/bin/bash -l
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=28
+#SBATCH --mem=60G
+#SBATCH --time=3:00:00
+#SBATCH --output=/home/santoro/KerCovEmb/out/%j.out
+#SBATCH --error=/home/santoro/KerCovEmb/out/%j.err
+#SBATCH --chdir=/home/santoro/KerCovEmb/
+#SBATCH --mail-type=END
+#SBATCH --mail-user=leonardo.santoro@epfl.ch
+
+# Load necessary modules
+module load gcc/8.4.0 python/3.11.5
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Run your Python script
+python simulations.py
+
+# Deactivate the environment
+deactivate
