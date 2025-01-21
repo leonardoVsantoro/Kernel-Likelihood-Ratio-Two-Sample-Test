@@ -414,6 +414,7 @@ class MPZ_two_sample_test:
 def hall_tajvidi_test_stat(X, Y, k=10):
     """
     Perform the Hall and Tajvidi nearest-neighbor test for equality of distributions.
+    Base od [ Hall and Tajvidi, '02]
     
     Parameters:
     X (np.ndarray): Sample from the first distribution, shape (n, d).
