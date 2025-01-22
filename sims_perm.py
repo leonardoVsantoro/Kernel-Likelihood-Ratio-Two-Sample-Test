@@ -31,6 +31,10 @@ _model_ = models.isotropic_vs_DiagSpiked
 model_params = {'num_spikes' : 10,  'spike_value' : 5}
 lsmodels.append((_model_ , model_params))
 
+_model_ = models.isotropic_vs_DiagSpiked_different_means
+model_params = {'num_spikes' : 10,  'spike_value' : 5, 'mu' : 1.3, 'numDiffLocs' :  20}
+lsmodels.append((_model_ , model_params))
+
 
 # --------- run -------------------------------------------------------------------------------------------------------------------------------
 def run_parallel(n, d, _model_, model_params, test_names, kernel_name, kernel_bandwith,  kappa_K, num_permutations, N_iters):
