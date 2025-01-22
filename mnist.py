@@ -89,7 +89,7 @@ for sigma in sigmas:
             data.append({"sigma": sigma, "test_name": test_name, "value": value})
 df = pd.DataFrame(data)
 rej_perc_df = df.groupby(["sigma", "test_name"])["value"].mean().reset_index()
-rej_perc_df.to_csv(f'out/{ts}/rp_additive.csv', index=False)
+rej_perc_df.to_csv(f'out/mnist/{ts}/rp_additive.csv', index=False)
 
 # -------------------------------- Blurring - Gaussian convolution --------------------------------------------------------------
 sigmas = np.linspace(0, 3, 7)
@@ -111,7 +111,7 @@ for sigma in sigmas:
             data.append({"sigma": sigma, "test_name": test_name, "value": value})
 df = pd.DataFrame(data)
 rej_perc_df = df.groupby(["sigma", "test_name"])["value"].mean().reset_index()
-rej_perc_df.to_csv(f'out/{ts}/rp_blurred.csv', index=False)
+rej_perc_df.to_csv(f'out/mnist/{ts}/rp_blurred.csv', index=False)
 
 # -------------------------------- Plot percentage of rejections vs Noise -----------------------------------------------------
 fig, [axl, axr] = plt.subplots(figsize=(12, 6), ncols=2)

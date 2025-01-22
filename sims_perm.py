@@ -24,7 +24,7 @@ test_names = ['FH', 'MMD', 'KNN', 'FR', 'HT']
 lsmodels = []
 
 _model_ = models.isotropic_different_means
-model_params = {'mu' : 1.3, 'numDiffLocs' :  20}
+model_params = {'mu' : .3, 'numDiffLocs' :  20}
 lsmodels.append((_model_ , model_params))
 
 _model_ = models.isotropic_vs_DiagSpiked
@@ -32,7 +32,7 @@ model_params = {'num_spikes' : 10,  'spike_value' : 5}
 lsmodels.append((_model_ , model_params))
 
 _model_ = models.isotropic_vs_DiagSpiked_different_means
-model_params = {'num_spikes' : 10,  'spike_value' : 5, 'mu' : 1.3, 'numDiffLocs' :  20}
+model_params = {'mu' : .15, 'spike_value' : 3,  'numDiffLocs' :  20,'num_spikes' : 10 }
 lsmodels.append((_model_ , model_params))
 
 
@@ -53,7 +53,7 @@ for _model_, model_params in lsmodels:
     for name in test_names:
         for _, (n,d) in zip(results, n_d_values):
             out.append( [name, n,d, N_iters, kernel_name, kernel_bandwith, kappa_K, num_permutations,  pd.DataFrame(_).mean(0)[name] ])
-    model_name = _model_(**model_params)(0).name
+    model_name = _model_(**model_params)(d).name
     if len( model_params.items()) > 1:
         folder_name = ''.join('{} : {}, '.format(key, value) for key, value in model_params.items())
     else:
@@ -72,9 +72,9 @@ import seaborn as sns
 import pandas as pd
 import os
 
-
 title_dict = {'isotropic_different_means' : 'Isotropic Gaussian data with different means',
-              'isotropic_vs_DiagSpiked' : 'Isotropic and diagonal spiked Gaussian data',}
+              'isotropic_vs_DiagSpiked' : 'Isotropic and diagonal spiked Gaussian data',
+              'isotropic_vs_DiagSpiked_different_means' : 'Isotropic and diagonal spiked Gaussian data with different means'}
 for file in lsout:
     df = pd.read_csv(file)
     ns = df['sample size'].unique()
