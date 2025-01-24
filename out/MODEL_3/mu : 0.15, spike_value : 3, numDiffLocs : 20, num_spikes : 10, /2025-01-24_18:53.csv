@@ -1,0 +1,16 @@
+,test,sample size,dimension,N_iters,kernel,kernel_bandwith,max conditioning number,num_permutations,percent of rejections
+0,FH,5,25,100,default,,100000.0,50,0.19
+1,FH,5,50,100,default,,100000.0,50,0.12
+2,FH,5,250,100,default,,100000.0,50,0.1
+3,MMD,5,25,100,default,,100000.0,50,0.12
+4,MMD,5,50,100,default,,100000.0,50,0.1
+5,MMD,5,250,100,default,,100000.0,50,0.05
+6,KNN,5,25,100,default,,100000.0,50,0.07
+7,KNN,5,50,100,default,,100000.0,50,0.05
+8,KNN,5,250,100,default,,100000.0,50,0.03
+9,FR,5,25,100,default,,100000.0,50,0.05
+10,FR,5,50,100,default,,100000.0,50,0.01
+11,FR,5,250,100,default,,100000.0,50,0.01
+12,HT,5,25,100,default,,100000.0,50,0.0
+13,HT,5,50,100,default,,100000.0,50,0.0
+14,HT,5,250,100,default,,100000.0,50,0.0

@@ -10,41 +10,6 @@ def FH_test_stat(KX, KY,  KX_ED,  KY_ED):
     N = KX.shape[0]
     return np.linalg.norm(inv_sqrtm_ED(KX_ED)@ KY @ inv_sqrtm_ED(KX_ED) - np.eye(N),'fro')/N**.5
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
-# @profile
-def OT_test_stat(KX, KY, KX_ED, KY_ED):
-    N = KX.shape[0]
-    SX, UX = KX_ED
-    sqrtm_X = sqrtm_ED((SX, UX))
-    sqrtm_inv_X = inv_sqrtm_ED((SX, UX))
-    S_MT, U_MT = EIG_DEC(sqrtm_X@KY@sqrtm_X)
-    otmap_XY = sqrtm_inv_X@sqrtm_ED((S_MT, U_MT))@sqrtm_inv_X
-    # midpoint = .25*(KX + KY + KX@otmap_XY + otmap_XY@KX) 
-    # S_MT, U_MT = EIG_DEC(midpoint)
-    otmap_YX = sqrtm_X@inv_sqrtm_ED((S_MT, U_MT))@sqrtm_X
-    return np.linalg.norm( otmap_XY - np.eye(N),'fro') + np.linalg.norm(otmap_YX - np.eye(N),'fro')
-# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
-@profile
-def Fro_test_stat(KX, KY, KX_ED, KY_ED):
-    SX, UX = KX_ED
-    SY, UY = KY_ED
-    log_ratio = np.log(np.prod(SX[SX>0])) -  np.prod(SY[SY>0])
-    N = KX.shape[0]
-    frob_term = np.trace(UX @ np.diag(SX**(-1)) @ UX.T @ KY - np.eye(N))
-    return (log_ratio + frob_term)**.5
-# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
-
-@profile
-def CovKerEmb_test_stat(name,KX,KY,KX_ED,KY_ED):
-    if name == 'FH':
-        return FH_test_stat(KX, KY, KX_ED, KY_ED)
-    elif name == 'Fro':
-        return Fro_test_stat(KX, KY, KX_ED, KY_ED)
-    elif name == 'OT':
-        return OT_test_stat(KX, KY, KX_ED, KY_ED)
-    else:
-        return None
-all_CovKerEmb_tests = ['FH', 'Fro', 'OT']
-# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
 class CKE_two_sample_test:
     """
@@ -55,7 +20,6 @@ class CKE_two_sample_test:
     X (ndarray): First sample (n x d).
     Y (ndarray): Second sample (m x d).
     kernel (function): Kernel function; default is Laplacian kernel with \sigma = 10
-    test_name (str): Name of the test to perform, from ['FH', 'Fro', 'OT']; default is FH (i.e. Feldman-Hayek test)
     kappa_K (float): Implicit regularization parameter, sets the maximum conditioning number of the embedded covariances. (default is 1e6)
 
     Attributes:
@@ -65,11 +29,11 @@ class CKE_two_sample_test:
     __call__: Perform the permutation test and return the p-value.
     """
 
-    def __init__(self, X, Y, test_name = 'FH', kappa_K=1e4, kernel=None):
+    def __init__(self, X, Y, kappa_K=1e4, kernel=None):
         """
         Initialize the test class.
         """
-        self.X = X; self.Y = Y; self.test_name = test_name; self.kappa_K = kappa_K
+        self.X = X; self.Y = Y; self.kappa_K = kappa_K
         n = len(X); m = len(Y)
         fullsample = np.concatenate([X, Y])
 
@@ -83,7 +47,7 @@ class CKE_two_sample_test:
 
         kxx = self.kernel_matrix[:n, :n]; kxy = self.kernel_matrix[:n, n:]; kyy = self.kernel_matrix[n:, n:]
         KX, KX_ED, KY, KY_ED = get_Kmats_X_Y(kxx, kxy, kyy, kappa_K)
-        self.obs_value = CovKerEmb_test_stat(test_name, KX, KY, KX_ED, KY_ED)
+        self.obs_value = FH_test_stat(KX, KY, KX_ED, KY_ED)
 
         
     def __call__(self, num_permutations=1000, return_stats=False):
@@ -105,7 +69,7 @@ class CKE_two_sample_test:
             reordered_kernel = self.kernel_matrix[permuted_indices][:, permuted_indices]
             _kxx = reordered_kernel[:n, :n] ; _kyy = reordered_kernel[n:, n:]; _kxy = reordered_kernel[:n, n:]
             _KX, _KX_ED, _KY, _KY_ED = get_Kmats_X_Y(_kxx, _kxy, _kyy, self.kappa_K)
-            permuted_stats.append(CovKerEmb_test_stat(self.test_name, _KX, _KY, _KX_ED, _KY_ED))
+            permuted_stats.append(FH_test_stat(_KX, _KY, _KX_ED, _KY_ED))
 
         p_value = float(np.mean(permuted_stats > self.obs_value))
 
@@ -508,3 +472,79 @@ class HT_two_sample_test:
             return p_value
         else:
             return permuted_stats, p_value
+
+
+
+
+class GKE_two_sample_test:
+    """
+    Two-sample test to determine if two samples come from the same distribution.
+    Based on the "Gaussian Kernel Embedding" (GKE) method proposed by [Santoro, Waghmare and Panaretos '24 B]
+
+    Arguments:
+    X (ndarray): First sample (n x d).
+    Y (ndarray): Second sample (m x d).
+    kernel (function): Kernel function; default is Laplacian kernel with \sigma = 10
+    kappa_K (float): Implicit regularization parameter, sets the maximum conditioning number of the embedded covariances. (default is 1e6)
+
+    Attributes:
+    obs_value (float): Observed MMD statistic value.
+
+    Methods:
+    __call__: Perform the permutation test and return the p-value.
+    """
+
+    def __init__(self, X, Y, kappa_K=1e4, kernel=None):
+        """
+        Initialize the test class.
+        """
+        self.X = X; self.Y = Y; self.kappa_K = kappa_K
+        n = len(X); m = len(Y)
+        fullsample = np.concatenate([X, Y])
+
+        if kernel is None:
+            pairwise_dists = cdist(fullsample, fullsample, 'euclidean')
+            median_dist = np.median(pairwise_dists[pairwise_dists > 0])  # Avoid zero distances
+            bandwidth = 2 * median_dist
+            self.kernel_matrix  = np.exp( - pairwise_dists / bandwidth)
+        else:
+            self.kernel_matrix  = kernel(fullsample, fullsample)  
+
+        kxx = self.kernel_matrix[:n, :n]; kxy = self.kernel_matrix[:n, n:]; kyy = self.kernel_matrix[n:, n:]
+        KX, KX_ED, KY, KY_ED = get_Kmats_X_Y(kxx, kxy, kyy, kappa_K)
+        muX = self.kernel_matrix[:n, :].sum(1)/n
+        muY = self.kernel_matrix[n:, :].sum(1)/m
+        self.obs_value = FH_test_stat(KX, KY, KX_ED, KY_ED) + np.linalg.norm(np.linalg.inv(KX + KY)@(muX - muY), 2)
+
+        
+    def __call__(self, num_permutations=1000, return_stats=False):
+        """
+        Perform the permutation test and return the p-value.
+
+        Parameters:
+        num_permutations (int): Number of permutations for calibrating the test.
+        return_stats (bool): If True, return the permuted statistics as well.
+
+        Returns:
+        float: p-value of the test.
+        tuple: (permuted_stats, p_value) if return_stats is True.
+        """
+        n, m = len(self.X), len(self.Y)
+        permuted_stats =[]
+        for _ in np.arange(num_permutations):
+            permuted_indices = np.random.permutation(n + n)
+            reordered_kernel = self.kernel_matrix[permuted_indices][:, permuted_indices]
+            _kxx = reordered_kernel[:n, :n] ; _kyy = reordered_kernel[n:, n:]; _kxy = reordered_kernel[:n, n:]
+            _KX, _KX_ED, _KY, _KY_ED = get_Kmats_X_Y(_kxx, _kxy, _kyy, self.kappa_K)
+            _muX = reordered_kernel[:n, :].sum(1)/n
+            _muY = reordered_kernel[n:, :].sum(1)/m
+            permuted_stats.append(FH_test_stat(_KX, _KY, _KX_ED, _KY_ED) + np.linalg.norm(np.linalg.inv(_KX + _KY)@(_muX - _muY), 2))
+            
+        p_value = float(np.mean(permuted_stats > self.obs_value))
+
+        if not return_stats:
+            return p_value
+        else:
+            return permuted_stats, p_value
+
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 

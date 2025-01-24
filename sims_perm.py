@@ -37,16 +37,12 @@ lsmodels.append((_model_ , model_params))
 
 
 # --------- run -------------------------------------------------------------------------------------------------------------------------------
-def run_parallel(n, d, _model_, model_params, test_names, kernel_name, kernel_bandwith,  kappa_K, num_permutations, N_iters):
-    iter_args = [(n, d, _model_,model_params, test_names, kernel_name, kernel_bandwith, kappa_K, num_permutations) for _ in range(N_iters)]
-    results = Parallel(n_jobs=NUM_CORES)(delayed(run_iteration)(*args) for args in iter_args)
-    return results
 
 lsout = [] 
 for _model_, model_params in lsmodels:
     results = []
     for n, d in n_d_values:
-        decisions_list = run_parallel(n, d, _model_, model_params, test_names, kernel_name, kernel_bandwith, kappa_K, num_permutations, N_iters)
+        decisions_list = run_parallel(n, d, _model_, model_params, test_names, kernel_name, kernel_bandwith, kappa_K, num_permutations, N_iters, NUM_CORES)
         results.append(decisions_list)
     out = []
     for name in test_names:
