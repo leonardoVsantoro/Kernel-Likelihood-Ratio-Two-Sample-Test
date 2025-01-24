@@ -3,7 +3,7 @@ from functions.tools import *
 from functions.TestFuns import *
 import models.models_classes as models
 from functions.run import *
-
+ts = datetime.now().strftime("%Y-%m-%d_%H:%M")
 
 # --------- set parameters ---------------------------------------------------------------------------------------------------------------------
 NUM_CORES = 72
@@ -20,7 +20,7 @@ kernel_bandwith = None
 test_names = ['FH', 'MMD', 'KNN', 'FR', 'HT']
 
 
-# --------- select model ---------------------------------------------------------------------------------------------------------------------
+# --------- select models ---------------------------------------------------------------------------------------------------------------------
 lsmodels = []
 
 _model_ = models.isotropic_different_means
@@ -42,7 +42,6 @@ def run_parallel(n, d, _model_, model_params, test_names, kernel_name, kernel_ba
     results = Parallel(n_jobs=NUM_CORES)(delayed(run_iteration)(*args) for args in iter_args)
     return results
 
-
 lsout = [] 
 for _model_, model_params in lsmodels:
     results = []
@@ -59,7 +58,6 @@ for _model_, model_params in lsmodels:
     else:
         folder_name = ''.join('{} : {}'.format(key, value) for key, value in model_params.items())
     os.makedirs('out/' + model_name + '/' + folder_name, exist_ok=True)
-    ts = datetime.now().strftime("%Y-%m-%d_%H:%M")
     data_out = pd.DataFrame(out, 
                 columns= ['test', 'sample size', 'dimension', 'N_iters', 'kernel', 'kernel_bandwith', 'max conditioning number', 'num_permutations', 'percent of rejections']
                 )
@@ -72,16 +70,11 @@ import seaborn as sns
 import pandas as pd
 import os
 
-title_dict = {'isotropic_different_means' : 'Isotropic Gaussian data with different means',
-              'isotropic_vs_DiagSpiked' : 'Isotropic and diagonal spiked Gaussian data',
-              'isotropic_vs_DiagSpiked_different_means' : 'Isotropic and diagonal spiked Gaussian data with different means'}
 for file in lsout:
     df = pd.read_csv(file)
     ns = df['sample size'].unique()
     
     fig, axs = plt.subplots(figsize=(5.5*len(ns) , 6), ncols = len(ns))
-
-    fig.suptitle('{}'.format(title_dict[file.split('/')[1]]))
     for n,ax in zip(ns,axs):
         sns.lineplot(data=df[df['sample size'] == n], x="dimension",  y="percent of rejections", hue="test",style="test", markers=True, dashes=False, ax=ax)
         ax.set_xlabel("Dimension (log)")
@@ -92,8 +85,6 @@ for file in lsout:
         ax.set_xscale('log') 
         plt.tight_layout()
 
-
-	
     output_dir = f'figures/{ts}'
     os.makedirs(output_dir, exist_ok=True)
     fig.savefig(f'{output_dir}/simulations_{file.split("/")[1]}.png')
