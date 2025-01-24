@@ -7,11 +7,10 @@ from functions.tru import *
 
 test_names = ['FH', 'MMD', 'KNN', 'FR', 'HT']
 
-# for _model_ in [ models.isotropic_vs_DiagSpiked(10, 2), models.isotropic_different_means(1.5, 20)]:
-
-for _model_ in [ models.isotropic_different_means(.25, 20),
-                 models.isotropic_different_means(10, 3),
-                 models.isotropic_vs_DiagSpiked_different_means(.25,3, 20,10)]:
+for _model_ in [ models.MODEL_1(.25, 20),
+                 models.MODEL_2(10, 3),
+                 models.MODEL_3(.25,3, 20,10)]:
+    
 #----------------------- KDE PART ----------------------------------------------------------------------    
     n, d = 50, 250
     num_reps = 200
@@ -57,15 +56,7 @@ for _model_ in [ models.isotropic_different_means(.25, 20),
             powers[test].append(  max( [np.mean(fromALTERNATIVE > np.quantile(fromNULL, .95)), np.mean(fromALTERNATIVE < np.quantile(fromNULL, .05))]) )
 
     # ----- PLOT 
-
-
-    title_dict = {'isotropic_different_means' : 'Isotropic Gaussian data with different means',
-              'isotropic_vs_DiagSpiked' : 'Isotropic and diagonal spiked Gaussian data',
-              'isotropic_vs_DiagSpiked_different_means' : 'Isotropic and diagonal spiked Gaussian data with different means'}
-
-
     fig, ax = plt.subplots(figsize=(6.5, 6))
-    fig.suptitle('{}'.format(title_dict[_model_(d).name]))
     sns.lineplot(pd.DataFrame(powers).assign(d=[d for n,d in n_d__values]).set_index('d'), markers=True, dashes=False, ax=ax)
     ax.set_xscale('log')
     ax.set_ylabel('power')
