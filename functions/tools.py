@@ -4,7 +4,7 @@ from modules import *
 
 
 
-@profile
+
 def get_Kmats_X_Y(kxx, kxy, kyy, regularisation_param):
     kyx = kxy.T
     n = kxx.shape[0]
@@ -30,7 +30,7 @@ def project_to_psd(A):
     S = np.clip(eigvals, min_val_to_clip, None)
     return U @ np.diag(S) @ U.T
 
-@profile
+
 def EIG_DEC(A):
     #assert np.allclose(A, A.T), "Matrix is not symmetric"
     eigvals, eigvecs = LA.eigh(A)
@@ -40,12 +40,12 @@ def EIG_DEC(A):
     #     raise ValueError("SVD failed")
     return S, U
 
-@profile
+
 def sqrtm_ED(eigdec):
     S, U = eigdec
     return U @ np.diag( np.clip(S, min_val_to_clip, None)**.5)  @ U.T
 
-@profile
+
 def inv_sqrtm_ED(eigdec):
     S, U = eigdec
     return U @ np.diag(np.clip(S, min_val_to_clip, None)**-.5)  @ U.T
@@ -77,13 +77,13 @@ def efficient_cov_eigdec(X):
 
     return eigenvectors, eigenvalues
 
-@profile
+
 def reorder_kernel(kernel_matrix, permuted_indices_1, permuted_indices_2):
     return kernel_matrix[permuted_indices_1, :][:, permuted_indices_2]
     #return kernel_matrix[np.ix_(permuted_indices_1, permuted_indices_2)]
 
 
-# @profile
+# 
 # def reorder_kernel(kernel_matrix, permuted_indices):
 #     n = len(permuted_indices)//2
 #     kxx = kernel_matrix[permuted_indices[:n], :][:, permuted_indices[:n]]
@@ -96,7 +96,7 @@ def reorder_kernel(kernel_matrix, permuted_indices_1, permuted_indices_2):
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 # REGULARIZATION
 
-@profile
+
 def regularize_with_condition_number_byRidge(A, max_condition_number):
     S, U  = EIG_DEC(A)
     # cond_num = S[-1]/S[0]
@@ -117,7 +117,7 @@ def regularize_with_ridge(A, ridge):
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 # BURES WASSERSTEIN
-@profile
+
 def optmap(F,G, eigdec_F = None):
     if eigdec_F is None:
         UF, SF = EIG_DEC(F)

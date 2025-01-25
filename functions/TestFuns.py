@@ -512,9 +512,10 @@ class GKE_two_sample_test:
 
         kxx = self.kernel_matrix[:n, :n]; kxy = self.kernel_matrix[:n, n:]; kyy = self.kernel_matrix[n:, n:]
         KX, KX_ED, KY, KY_ED = get_Kmats_X_Y(kxx, kxy, kyy, kappa_K)
-        muX = self.kernel_matrix[:n, :].sum(1)/n
-        muY = self.kernel_matrix[n:, :].sum(1)/m
-        self.obs_value = FH_test_stat(KX, KY, KX_ED, KY_ED) + np.linalg.norm(np.linalg.inv(KX + KY)@(muX - muY), 2)
+        muX = self.kernel_matrix[:n, :].sum(0)/n
+        muY = self.kernel_matrix[n:, :].sum(0)/m
+        self.obs_value_cov = FH_test_stat(KX, KY, KX_ED, KY_ED)
+        self.obs_value_mean = np.linalg.norm(inv_sqrtm_ED(KX_ED)@(muX - muY))/2 + np.linalg.norm(inv_sqrtm_ED(KY_ED)@(muX - muY))/2
 
         
     def __call__(self, num_permutations=1000, return_stats=False):
@@ -530,21 +531,26 @@ class GKE_two_sample_test:
         tuple: (permuted_stats, p_value) if return_stats is True.
         """
         n, m = len(self.X), len(self.Y)
-        permuted_stats =[]
+        permuted_stats_cov = []
+        permuted_stats_mean = []
+        permuted_stats = []
         for _ in np.arange(num_permutations):
             permuted_indices = np.random.permutation(n + n)
             reordered_kernel = self.kernel_matrix[permuted_indices][:, permuted_indices]
             _kxx = reordered_kernel[:n, :n] ; _kyy = reordered_kernel[n:, n:]; _kxy = reordered_kernel[:n, n:]
             _KX, _KX_ED, _KY, _KY_ED = get_Kmats_X_Y(_kxx, _kxy, _kyy, self.kappa_K)
-            _muX = reordered_kernel[:n, :].sum(1)/n
-            _muY = reordered_kernel[n:, :].sum(1)/m
-            permuted_stats.append(FH_test_stat(_KX, _KY, _KX_ED, _KY_ED) + np.linalg.norm(np.linalg.inv(_KX + _KY)@(_muX - _muY), 2))
+            _muX = reordered_kernel[:n, :].sum(0)/n
+            _muY = reordered_kernel[n:, :].sum(0)/m
+            permuted_stats_cov.append(FH_test_stat(_KX, _KY, _KX_ED, _KY_ED))
+            permuted_stats_mean.append(np.linalg.norm(inv_sqrtm_ED(_KX_ED)@(_muX - _muY))/2 + np.linalg.norm(inv_sqrtm_ED(_KY_ED)@(_muX - _muY))/2)
+            permuted_stats.append(permuted_stats_cov[-1] + permuted_stats_mean[-1])
             
-        p_value = float(np.mean(permuted_stats > self.obs_value))
+        p_value_mean = float(np.mean(permuted_stats_mean > self.obs_value_mean))
+        p_value_cov = float(np.mean(permuted_stats_cov > self.obs_value_cov))
 
         if not return_stats:
-            return p_value
+            return 2 * min([p_value_mean, p_value_cov])
         else:
-            return permuted_stats, p_value
+            return permuted_stats, 2 * min([p_value_mean, p_value_cov])
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 

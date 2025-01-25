@@ -28,5 +28,8 @@ def run_iteration(n, d, _model_, model_params, test_names, kernel_name, kernel_b
 
 def run_parallel(n, d, _model_, model_params, test_names, kernel_name, kernel_bandwith,  kappa_K, num_permutations, N_iters, NUM_CORES):
     iter_args = [(n, d, _model_,model_params, test_names, kernel_name, kernel_bandwith, kappa_K, num_permutations) for _ in range(N_iters)]
-    results = Parallel(n_jobs=NUM_CORES)(delayed(run_iteration)(*args) for args in iter_args)
+    try:
+        results = Parallel(n_jobs=NUM_CORES)(delayed(run_iteration)(*args) for args in tqdm(iter_args))
+    except:
+        results = Parallel(n_jobs=NUM_CORES)(delayed(run_iteration)(*args) for args in iter_args)
     return results
