@@ -11,7 +11,7 @@ from collections import defaultdict
 from scipy.ndimage import gaussian_filter
 from datetime import datetime
 
-ts = datetime.now().strftime("%Y-%m-%d_%H-%M")
+ts = datetime.now().strftime("%Y-%m-%d_%H:%M")
 
 output_directories = [
     'figures',
@@ -48,7 +48,7 @@ NUM_CORES = 10
 num_replications = 200
 num_samples = 75
 num_permutations = 500
-test_names = ['FH', 'MMD', 'KNN', 'FR', 'HT']
+test_names = ['FH-G', 'FH-C', 'MMD', 'KNN', 'FR', 'HT']
 kappa_K = 1e5
 
 def run_perturbed_minst_test(X, Y, num_permutations, test_names):
@@ -92,6 +92,7 @@ for sigma in sigmas:
             data.append({"sigma": sigma, "test_name": test_name, "value": value})
 df = pd.DataFrame(data)
 rej_perc_df = df.groupby(["sigma", "test_name"])["value"].mean().reset_index()
+
 rej_perc_df.to_csv(f'out/mnist/{ts}/rp_additive.csv', index=False)
 
 # -------------------------------- Blurring - Gaussian convolution --------------------------------------------------------------
@@ -118,8 +119,8 @@ rej_perc_df.to_csv(f'out/mnist/{ts}/rp_blurred.csv', index=False)
 
 # -------------------------------- Plot percentage of rejections vs Noise -----------------------------------------------------
 fig, [axl, axr] = plt.subplots(figsize=(12, 6), ncols=2)
-df_additive = pd.read_csv(f'out/{ts}/rp_additive.csv')
-df_blurred = pd.read_csv(f'out/{ts}/rp_blurred.csv')
+df_additive = pd.read_csv(f'out/mnist/{ts}/rp_additive.csv')
+df_blurred = pd.read_csv(f'out/mnist/{ts}/rp_blurred.csv')
 for ax, df, title in zip([axl, axr], [df_additive, df_blurred], ['Additive Noise', 'Blurred Image']):
     sns.lineplot(
         data=df,

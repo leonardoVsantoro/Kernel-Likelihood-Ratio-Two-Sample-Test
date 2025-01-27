@@ -17,7 +17,7 @@ N_iters = 100
 kappa_K = 1e5
 kernel_name = 'default'
 kernel_bandwith = None
-test_names = ['G-FH', 'C-FH', 'MMD', 'KNN', 'FR', 'HT']
+test_names = ['FH-G', 'FH-C', 'MMD', 'KNN', 'FR', 'HT']
 
 
 # --------- select models ---------------------------------------------------------------------------------------------------------------------
@@ -28,11 +28,11 @@ model_params = {'mu' : .3, 'numDiffLocs' :  20}
 lsmodels.append((_model_ , model_params))
 
 _model_ = models.MODEL_2
-model_params = {'num_spikes' : 8,  'spike_value' : 5}
+model_params = {'num_spikes' : 5,  'spike_value' : 4}
 lsmodels.append((_model_ , model_params))
 
 _model_ = models.MODEL_3
-model_params = {'mu' : .3, 'spike_value' : 5,  'numDiffLocs' :  20,'num_spikes' : 8 }
+model_params = {'mu' : .3, 'spike_value' : 4,  'numDiffLocs' :  20,'num_spikes' : 5 }
 lsmodels.append((_model_ , model_params))
 
 
