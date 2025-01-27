@@ -1,14 +1,99 @@
 from modules import *
-
 from functions.tools import *
 
-
-
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
-@profile
-def FH_test_stat(KX, KY,  KX_ED,  KY_ED):
+def covFH_test_stat(KX, KY,  KX_ED,  KY_ED = None):
     N = KX.shape[0]
     return np.linalg.norm(inv_sqrtm_ED(KX_ED)@ KY @ inv_sqrtm_ED(KX_ED) - np.eye(N),'fro')/N**.5
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+def meanFH_test_stat(muX, muY, KX_ED, KY_ED):
+    return np.linalg.norm(inv_sqrtm_ED(KX_ED)@(muX - muY))/2 + np.linalg.norm(inv_sqrtm_ED(KY_ED)@(muX - muY))/2
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+def hall_tajvidi_test_stat(X, Y, k=10):
+    """
+    Perform the Hall and Tajvidi nearest-neighbor test for equality of distributions.
+    Base od [ Hall and Tajvidi, '02]
+    
+    Parameters:
+    X (np.ndarray): Sample from the first distribution, shape (n, d).
+    Y (np.ndarray): Sample from the second distribution, shape (m, d).
+    k (int): Number of nearest neighbors to consider (default is 1).
+
+    Returns:
+    float: Test statistic (fraction of nearest neighbors from the opposite sample).
+    """
+    # Combine both samples and label them
+    Z = np.vstack([X, Y])  # Combined dataset
+    n, d = X.shape
+    m = Y.shape[0]
+    labels = np.array([0] * n + [1] * m)  # 0 for X, 1 for Y
+    
+    # Compute pairwise distances
+    distances = distance.cdist(Z, Z)  # Pairwise distances between all points
+    
+    # Initialize count for nearest neighbors from the opposite sample
+    count = 0
+    
+    for i in range(len(Z)):
+        # Get sorted indices of distances for point i, excluding itself
+        sorted_indices = np.argsort(distances[i])
+        sorted_indices = sorted_indices[sorted_indices != i]  # Exclude itself
+        
+        # Find the k nearest neighbors
+        nearest_labels = labels[sorted_indices[:k]]
+        
+        # Count how many of these neighbors belong to the opposite class
+        if labels[i] == 0:  # Point is from X
+            count += np.sum(nearest_labels == 1)
+        else:  # Point is from Y
+            count += np.sum(nearest_labels == 0)
+    
+    # Normalize the count to get the test statistic
+    test_stat = count / (k * len(Z))
+    
+    return test_stat
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+def mmd_from_kernel(kernel_matrix, n, m):
+    k_xx = kernel_matrix [:n, :n]
+    np.fill_diagonal(k_xx, 0)
+    k_yy = kernel_matrix [m:, m:]
+    np.fill_diagonal(k_yy, 0)
+    k_xy = kernel_matrix [:n, m:]    
+    obs_value = k_xx.sum()/(n*(n-1)) +  k_yy.sum()/(m*(m-1)) - 2* k_xy.sum()/(n*m)
+    return obs_value
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+def mpz_test_stat(X, Y, center = True):
+    """
+    Perform the Masarotto-Panaretos-Zemel for equality of (centered) distributions.
+    
+    Parameters:
+    X (np.ndarray): Sample from the first distribution, shape (n, d).
+    Y (np.ndarray): Sample from the second distribution, shape (m, d).
+    center (bool): If True, center the samples before computing the test statistic.
+    
+    Returns:
+    float: Test statistic
+    """
+    if center:
+        X = X - X.mean(0)
+        Y = Y - Y.mean(0)
+    d = X.shape[1]
+
+    
+    SX, UX = efficient_cov_eigdec(X - X.mean(0))
+    SY, UY = efficient_cov_eigdec(Y - Y.mean(0))
+
+    sqrtm_CX = sqrtm_ED((SX, UX))
+    sqrtm_inv_CX = inv_sqrtm_ED((SX, UX))
+    
+    S_MT, U_MT  = EIG_DEC(sqrtm_CX @ (np.cov(Y.T)) @ sqrtm_CX)
+    otmap_XY = sqrtm_inv_CX@sqrtm_ED((S_MT, U_MT))@sqrtm_inv_CX
+
+    otmap_YX = sqrtm_CX@inv_sqrtm_ED((S_MT, U_MT))@sqrtm_CX
+
+    return np.linalg.norm( otmap_XY - np.eye(d),'fro') + np.linalg.norm(otmap_YX - np.eye(d),'fro')
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
 class CKE_two_sample_test:
@@ -47,7 +132,7 @@ class CKE_two_sample_test:
 
         kxx = self.kernel_matrix[:n, :n]; kxy = self.kernel_matrix[:n, n:]; kyy = self.kernel_matrix[n:, n:]
         KX, KX_ED, KY, KY_ED = get_Kmats_X_Y(kxx, kxy, kyy, kappa_K)
-        self.obs_value = FH_test_stat(KX, KY, KX_ED, KY_ED)
+        self.obs_value = covFH_test_stat(KX, KY, KX_ED, KY_ED)
 
         
     def __call__(self, num_permutations=1000, return_stats=False):
@@ -69,7 +154,7 @@ class CKE_two_sample_test:
             reordered_kernel = self.kernel_matrix[permuted_indices][:, permuted_indices]
             _kxx = reordered_kernel[:n, :n] ; _kyy = reordered_kernel[n:, n:]; _kxy = reordered_kernel[:n, n:]
             _KX, _KX_ED, _KY, _KY_ED = get_Kmats_X_Y(_kxx, _kxy, _kyy, self.kappa_K)
-            permuted_stats.append(FH_test_stat(_KX, _KY, _KX_ED, _KY_ED))
+            permuted_stats.append(covFH_test_stat(_KX, _KY, _KX_ED, _KY_ED))
 
         p_value = float(np.mean(permuted_stats > self.obs_value))
 
@@ -80,17 +165,83 @@ class CKE_two_sample_test:
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
+class GKE_two_sample_test:
+    """
+    Two-sample test to determine if two samples come from the same distribution.
+    Based on the "Gaussian Kernel Embedding" (GKE) method proposed by [Santoro, Waghmare and Panaretos '24 B]
 
-def mmd_from_kernel(kernel_matrix, n, m):
+    Arguments:
+    X (ndarray): First sample (n x d).
+    Y (ndarray): Second sample (m x d).
+    kernel (function): Kernel function; default is Laplacian kernel with \sigma = 10
+    kappa_K (float): Implicit regularization parameter, sets the maximum conditioning number of the embedded covariances. (default is 1e6)
 
-    k_xx = kernel_matrix [:n, :n]
-    np.fill_diagonal(k_xx, 0)
-    k_yy = kernel_matrix [m:, m:]
-    np.fill_diagonal(k_yy, 0)
-    k_xy = kernel_matrix [:n, m:]    
+    Attributes:
+    obs_value (float): Observed MMD statistic value.
 
-    obs_value = k_xx.sum()/(n*(n-1)) +  k_yy.sum()/(m*(m-1)) - 2* k_xy.sum()/(n*m)
-    return obs_value
+    Methods:
+    __call__: Perform the permutation test and return the p-value.
+    """
+
+    def __init__(self, X, Y, kappa_K=1e4, kernel=None):
+        """
+        Initialize the test class.
+        """
+        self.X = X; self.Y = Y; self.kappa_K = kappa_K
+        n = len(X); m = len(Y)
+        fullsample = np.concatenate([X, Y])
+
+        if kernel is None:
+            pairwise_dists = cdist(fullsample, fullsample, 'euclidean')
+            median_dist = np.median(pairwise_dists[pairwise_dists > 0])  # Avoid zero distances
+            bandwidth = 2 * median_dist
+            self.kernel_matrix  = np.exp( - pairwise_dists / bandwidth)
+        else:
+            self.kernel_matrix  = kernel(fullsample, fullsample)  
+
+        kxx = self.kernel_matrix[:n, :n]; kxy = self.kernel_matrix[:n, n:]; kyy = self.kernel_matrix[n:, n:]
+        KX, KX_ED, KY, KY_ED = get_Kmats_X_Y(kxx, kxy, kyy, kappa_K)
+        muX = self.kernel_matrix[:n, :].sum(0)/n
+        muY = self.kernel_matrix[n:, :].sum(0)/m
+        self.obs_value_cov = covFH_test_stat(KX, KY, KX_ED, KY_ED)
+        self.obs_value_mean = meanFH_test_stat(muX, muY, KX_ED, KY_ED)
+
+    def __call__(self, num_permutations=1000, return_stats=False):
+        """
+        Perform the permutation test and return the p-value.
+
+        Parameters:
+        num_permutations (int): Number of permutations for calibrating the test.
+        return_stats (bool): If True, return the permuted statistics as well.
+
+        Returns:
+        float: p-value of the test.
+        tuple: (permuted_stats, p_value) if return_stats is True.
+        """
+        n, m = len(self.X), len(self.Y)
+        permuted_stats_cov = []
+        permuted_stats_mean = []
+        permuted_stats = []
+        for _ in np.arange(num_permutations):
+            permuted_indices = np.random.permutation(n + n)
+            reordered_kernel = self.kernel_matrix[permuted_indices][:, permuted_indices]
+            _kxx = reordered_kernel[:n, :n] ; _kyy = reordered_kernel[n:, n:]; _kxy = reordered_kernel[:n, n:]
+            _KX, _KX_ED, _KY, _KY_ED = get_Kmats_X_Y(_kxx, _kxy, _kyy, self.kappa_K)
+            _muX = reordered_kernel[:n, :].sum(0)/n
+            _muY = reordered_kernel[n:, :].sum(0)/m
+            permuted_stats_cov.append(covFH_test_stat(_KX, _KY, _KX_ED, _KY_ED))
+            permuted_stats_mean.append(meanFH_test_stat(_muX, _muY, _KX_ED, _KY_ED))
+            permuted_stats.append(permuted_stats_cov[-1] + permuted_stats_mean[-1])
+            
+        p_value_mean = float(np.mean(permuted_stats_mean > self.obs_value_mean))
+        p_value_cov = float(np.mean(permuted_stats_cov > self.obs_value_cov))
+
+        if not return_stats:
+            return 2 * min([p_value_mean, p_value_cov])
+        else:
+            return permuted_stats, 2 * min([p_value_mean, p_value_cov])
+
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
 class MMD_two_sample_test:
     """
@@ -289,36 +440,6 @@ class FR_two_sample_test:
             return permuted_stats, p_value
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
-def mpz_test_stat(X, Y, center = True):
-    """
-    Perform the Masarotto-Panaretos-Zemel for equality of (centered) distributions.
-    
-    Parameters:
-    X (np.ndarray): Sample from the first distribution, shape (n, d).
-    Y (np.ndarray): Sample from the second distribution, shape (m, d).
-    center (bool): If True, center the samples before computing the test statistic.
-    
-    Returns:
-    float: Test statistic
-    """
-    if center:
-        X = X - X.mean(0)
-        Y = Y - Y.mean(0)
-    d = X.shape[1]
-
-    
-    SX, UX = efficient_cov_eigdec(X - X.mean(0))
-    SY, UY = efficient_cov_eigdec(Y - Y.mean(0))
-
-    sqrtm_CX = sqrtm_ED((SX, UX))
-    sqrtm_inv_CX = inv_sqrtm_ED((SX, UX))
-    
-    S_MT, U_MT  = EIG_DEC(sqrtm_CX @ (np.cov(Y.T)) @ sqrtm_CX)
-    otmap_XY = sqrtm_inv_CX@sqrtm_ED((S_MT, U_MT))@sqrtm_inv_CX
-
-    otmap_YX = sqrtm_CX@inv_sqrtm_ED((S_MT, U_MT))@sqrtm_CX
-
-    return np.linalg.norm( otmap_XY - np.eye(d),'fro') + np.linalg.norm(otmap_YX - np.eye(d),'fro')
 
 class MPZ_two_sample_test:
     """
@@ -374,51 +495,6 @@ class MPZ_two_sample_test:
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
-
-def hall_tajvidi_test_stat(X, Y, k=10):
-    """
-    Perform the Hall and Tajvidi nearest-neighbor test for equality of distributions.
-    Base od [ Hall and Tajvidi, '02]
-    
-    Parameters:
-    X (np.ndarray): Sample from the first distribution, shape (n, d).
-    Y (np.ndarray): Sample from the second distribution, shape (m, d).
-    k (int): Number of nearest neighbors to consider (default is 1).
-
-    Returns:
-    float: Test statistic (fraction of nearest neighbors from the opposite sample).
-    """
-    # Combine both samples and label them
-    Z = np.vstack([X, Y])  # Combined dataset
-    n, d = X.shape
-    m = Y.shape[0]
-    labels = np.array([0] * n + [1] * m)  # 0 for X, 1 for Y
-    
-    # Compute pairwise distances
-    distances = distance.cdist(Z, Z)  # Pairwise distances between all points
-    
-    # Initialize count for nearest neighbors from the opposite sample
-    count = 0
-    
-    for i in range(len(Z)):
-        # Get sorted indices of distances for point i, excluding itself
-        sorted_indices = np.argsort(distances[i])
-        sorted_indices = sorted_indices[sorted_indices != i]  # Exclude itself
-        
-        # Find the k nearest neighbors
-        nearest_labels = labels[sorted_indices[:k]]
-        
-        # Count how many of these neighbors belong to the opposite class
-        if labels[i] == 0:  # Point is from X
-            count += np.sum(nearest_labels == 1)
-        else:  # Point is from Y
-            count += np.sum(nearest_labels == 0)
-    
-    # Normalize the count to get the test statistic
-    test_stat = count / (k * len(Z))
-    
-    return test_stat
-
 class HT_two_sample_test:
     """
     Two-sample Hall and Tajvidi nearest-neighbor test for equality of distributions.
@@ -472,85 +548,5 @@ class HT_two_sample_test:
             return p_value
         else:
             return permuted_stats, p_value
-
-
-
-
-class GKE_two_sample_test:
-    """
-    Two-sample test to determine if two samples come from the same distribution.
-    Based on the "Gaussian Kernel Embedding" (GKE) method proposed by [Santoro, Waghmare and Panaretos '24 B]
-
-    Arguments:
-    X (ndarray): First sample (n x d).
-    Y (ndarray): Second sample (m x d).
-    kernel (function): Kernel function; default is Laplacian kernel with \sigma = 10
-    kappa_K (float): Implicit regularization parameter, sets the maximum conditioning number of the embedded covariances. (default is 1e6)
-
-    Attributes:
-    obs_value (float): Observed MMD statistic value.
-
-    Methods:
-    __call__: Perform the permutation test and return the p-value.
-    """
-
-    def __init__(self, X, Y, kappa_K=1e4, kernel=None):
-        """
-        Initialize the test class.
-        """
-        self.X = X; self.Y = Y; self.kappa_K = kappa_K
-        n = len(X); m = len(Y)
-        fullsample = np.concatenate([X, Y])
-
-        if kernel is None:
-            pairwise_dists = cdist(fullsample, fullsample, 'euclidean')
-            median_dist = np.median(pairwise_dists[pairwise_dists > 0])  # Avoid zero distances
-            bandwidth = 2 * median_dist
-            self.kernel_matrix  = np.exp( - pairwise_dists / bandwidth)
-        else:
-            self.kernel_matrix  = kernel(fullsample, fullsample)  
-
-        kxx = self.kernel_matrix[:n, :n]; kxy = self.kernel_matrix[:n, n:]; kyy = self.kernel_matrix[n:, n:]
-        KX, KX_ED, KY, KY_ED = get_Kmats_X_Y(kxx, kxy, kyy, kappa_K)
-        muX = self.kernel_matrix[:n, :].sum(0)/n
-        muY = self.kernel_matrix[n:, :].sum(0)/m
-        self.obs_value_cov = FH_test_stat(KX, KY, KX_ED, KY_ED)
-        self.obs_value_mean = np.linalg.norm(inv_sqrtm_ED(KX_ED)@(muX - muY))/2 + np.linalg.norm(inv_sqrtm_ED(KY_ED)@(muX - muY))/2
-
-        
-    def __call__(self, num_permutations=1000, return_stats=False):
-        """
-        Perform the permutation test and return the p-value.
-
-        Parameters:
-        num_permutations (int): Number of permutations for calibrating the test.
-        return_stats (bool): If True, return the permuted statistics as well.
-
-        Returns:
-        float: p-value of the test.
-        tuple: (permuted_stats, p_value) if return_stats is True.
-        """
-        n, m = len(self.X), len(self.Y)
-        permuted_stats_cov = []
-        permuted_stats_mean = []
-        permuted_stats = []
-        for _ in np.arange(num_permutations):
-            permuted_indices = np.random.permutation(n + n)
-            reordered_kernel = self.kernel_matrix[permuted_indices][:, permuted_indices]
-            _kxx = reordered_kernel[:n, :n] ; _kyy = reordered_kernel[n:, n:]; _kxy = reordered_kernel[:n, n:]
-            _KX, _KX_ED, _KY, _KY_ED = get_Kmats_X_Y(_kxx, _kxy, _kyy, self.kappa_K)
-            _muX = reordered_kernel[:n, :].sum(0)/n
-            _muY = reordered_kernel[n:, :].sum(0)/m
-            permuted_stats_cov.append(FH_test_stat(_KX, _KY, _KX_ED, _KY_ED))
-            permuted_stats_mean.append(np.linalg.norm(inv_sqrtm_ED(_KX_ED)@(_muX - _muY))/2 + np.linalg.norm(inv_sqrtm_ED(_KY_ED)@(_muX - _muY))/2)
-            permuted_stats.append(permuted_stats_cov[-1] + permuted_stats_mean[-1])
-            
-        p_value_mean = float(np.mean(permuted_stats_mean > self.obs_value_mean))
-        p_value_cov = float(np.mean(permuted_stats_cov > self.obs_value_cov))
-
-        if not return_stats:
-            return 2 * min([p_value_mean, p_value_cov])
-        else:
-            return permuted_stats, 2 * min([p_value_mean, p_value_cov])
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 

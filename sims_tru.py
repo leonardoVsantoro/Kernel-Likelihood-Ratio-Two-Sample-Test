@@ -47,7 +47,7 @@ for _model_ in [ models.MODEL_1(.25, 20),
 #----------------------- POWER PART ----------------------------------------------------------------------    
     n_d__values =  [(50, 25), (50, 50),(50, 150), (50, 300), (50, 500), (50, 1000)]
     powers = {test : [] for test in test_names}
-    for n, d in tqdm(n_d__values):
+    for n, d in (n_d__values):
         null_vals, alternative_vals= H0_H1(n, d, _model_, test_names, kappa_K, num_reps, kernel = None, NUM_CORES=8)
         null_vals = {name : np.array(null_vals)[:,i] for i,name in enumerate(test_names)}
         alternative_vals = {name : np.array(alternative_vals)[:,i] for i,name in enumerate(test_names)}

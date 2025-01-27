@@ -7,7 +7,6 @@ from numpy.linalg import LinAlgError # type: ignore
 import os # type: ignore
 from datetime import datetime # type: ignore
 from scipy import linalg as LA# type: ignore
-from tqdm import tqdm # type: ignore
 from line_profiler import profile# type: ignore
 from joblib import Parallel, delayed # type: ignore
 from sklearn.neighbors import NearestNeighbors # type: ignore
