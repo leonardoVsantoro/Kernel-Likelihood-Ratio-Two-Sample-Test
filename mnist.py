@@ -49,14 +49,17 @@ num_replications = 200
 num_samples = 75
 num_permutations = 500
 test_names = ['FH', 'MMD', 'KNN', 'FR', 'HT']
+kappa_K = 1e5
 
 def run_perturbed_minst_test(X, Y, num_permutations, test_names):
     out = []
     for test in test_names:
         if test == 'MMD':
             out.append((test,  1 if MMD_two_sample_test(X, Y)(num_permutations) < 0.05 else 0))
-        elif test == 'FH':
-            out.append((test,  1 if CKE_two_sample_test(X, Y, kappa_K=1e5)(num_permutations) < 0.05 else 0))
+        elif test == 'FH-G':
+            out.append(( test, 1 if GKE_two_sample_test(X,Y, kappa_K = kappa_K)(num_permutations) < 0.05 else 0 ) )
+        elif test == 'FH-C':
+            out.append(( test, 1 if CKE_two_sample_test(X,Y, kappa_K = kappa_K)(num_permutations) < 0.05 else 0 ) )
         elif test == 'KNN':
             out.append((test,  1 if KNN_two_sample_test(X, Y, k=1)(num_permutations) < 0.05 else 0))
         elif test == 'FR':
@@ -92,7 +95,7 @@ rej_perc_df = df.groupby(["sigma", "test_name"])["value"].mean().reset_index()
 rej_perc_df.to_csv(f'out/mnist/{ts}/rp_additive.csv', index=False)
 
 # -------------------------------- Blurring - Gaussian convolution --------------------------------------------------------------
-sigmas = np.linspace(0, 3, 7)
+sigmas = np.linspace(0, 5, 7)
 results = {}
 for sigma in sigmas:
     iter_args = [(np.array([gaussian_filter((_ + np.random.normal(0, .25, _.shape)).reshape(28, 28), sigma).flatten() for _ in X]),

@@ -10,30 +10,16 @@ import matplotlib.pyplot as plt  # type: ignore
 import seaborn as sns  # type: ignore
 
 
-
-
-title_dict = {'isotropic_different_means' : 'Isotropic Gaussian data with different means',
-              'isotropic_vs_DiagSpiked' : 'Isotropic and diagonal spiked Gaussian data',}
-
 def sample_test_vals(sample_X, sample_Y, n, test_names, kappa_K = 1e6, kernel = None ):
     X = sample_X(n)
     Y = sample_Y(n)  
     pooled = np.vstack([X, Y])
     values  = []
     for test_name in test_names:
-        if test_name in all_CovKerEmb_tests:
-            if kernel is None:
-                pairwise_dists = cdist(pooled, pooled, 'euclidean')
-                median_dist = np.median(pairwise_dists[pairwise_dists > 0])  # Avoid zero distances
-                bandwidth = 2 * median_dist
-                kernel_matrix  = np.exp( - pairwise_dists / bandwidth)
-            else:
-                kernel_matrix  = kernel(pooled, pooled)  
-            kxx = kernel_matrix[:n, :n]
-            kxy = kernel_matrix[:n, n:]
-            kyy = kernel_matrix[n:, n:]
-            KX, KX_ED, KY, KY_ED = get_Kmats_X_Y(kxx, kxy, kyy, kappa_K)
-            values.append(CovKerEmb_test_stat(test_name, KX, KY, KX_ED, KY_ED))
+        if test_name == 'FH-G':
+            values.append(GKE_two_sample_test(X,Y, kappa_K = kappa_K).obs_value)
+        if test_name == 'FH-C':
+            values.append(CKE_two_sample_test(X,Y, kappa_K = kappa_K).obs_value)
         if test_name == 'MMD':
             values.append(MMD_two_sample_test(X,Y).obs_value)
         if test_name == 'KNN':

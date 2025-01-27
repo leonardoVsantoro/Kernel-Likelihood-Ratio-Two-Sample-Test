@@ -17,22 +17,22 @@ N_iters = 100
 kappa_K = 1e5
 kernel_name = 'default'
 kernel_bandwith = None
-test_names = ['FH', 'MMD', 'KNN', 'FR', 'HT']
+test_names = ['G-FH', 'C-FH', 'MMD', 'KNN', 'FR', 'HT']
 
 
 # --------- select models ---------------------------------------------------------------------------------------------------------------------
 lsmodels = []
 
-_model_ = models.isotropic_different_means
+_model_ = models.MODEL_1
 model_params = {'mu' : .3, 'numDiffLocs' :  20}
 lsmodels.append((_model_ , model_params))
 
-_model_ = models.isotropic_vs_DiagSpiked
-model_params = {'num_spikes' : 10,  'spike_value' : 5}
+_model_ = models.MODEL_2
+model_params = {'num_spikes' : 8,  'spike_value' : 5}
 lsmodels.append((_model_ , model_params))
 
-_model_ = models.isotropic_vs_DiagSpiked_different_means
-model_params = {'mu' : .15, 'spike_value' : 3,  'numDiffLocs' :  20,'num_spikes' : 10 }
+_model_ = models.MODEL_3
+model_params = {'mu' : .3, 'spike_value' : 5,  'numDiffLocs' :  20,'num_spikes' : 8 }
 lsmodels.append((_model_ , model_params))
 
 
