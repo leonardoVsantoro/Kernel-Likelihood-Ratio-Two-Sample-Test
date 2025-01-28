@@ -4,7 +4,7 @@ from functions.tools import *
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 def covFH_test_stat(KX, KY,  KX_ED,  KY_ED = None):
     N = KX.shape[0]
-    return np.linalg.norm(inv_sqrtm_ED(KX_ED)@ KY @ inv_sqrtm_ED(KX_ED) - np.eye(N),'fro')/N**.5
+    return np.linalg.norm(inv_sqrtm_ED(KX_ED)@ (KX - KY) @ inv_sqrtm_ED(KX_ED) - np.eye(N),'fro')/N**.5
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 def meanFH_test_stat(muX, muY, KX_ED, KY_ED):
     return np.linalg.norm(inv_sqrtm_ED(KX_ED)@(muX - muY))/2 + np.linalg.norm(inv_sqrtm_ED(KY_ED)@(muX - muY))/2

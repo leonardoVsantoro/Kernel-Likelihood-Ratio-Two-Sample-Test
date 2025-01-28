@@ -44,7 +44,7 @@ for i in range(3):
 # -------------------------------- comparing 2 sets of digits -----------------------------------------------------------------
 group_1 = [9, 6, 8]
 group_2 = [4, 8]
-NUM_CORES = 10
+NUM_CORES = 72
 num_replications = 200
 num_samples = 75
 num_permutations = 500
