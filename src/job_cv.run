@@ -2,11 +2,11 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=72
-#SBATCH --mem=120G
+#SBATCH --mem=60G
 #SBATCH --time=3:00:00
-#SBATCH --output=/home/santoro/CKE/out/%j.out
-#SBATCH --error=/home/santoro/CKE/out/%j.err
-#SBATCH --chdir=/home/santoro/CKE/
+#SBATCH --output=/home/santoro/CKE/log/%j.out
+#SBATCH --error=/home/santoro/CKE/log/%j.err
+#SBATCH --chdir=/home/santoro/CKE/src
 #SBATCH --mail-type=END
 #SBATCH --mail-user=leonardo.santoro@epfl.ch
 
@@ -27,4 +27,4 @@ python --version
 pip list
 
 # Run the Python script
-python sims_tru.py
+python scripts/crossvalidation.py
