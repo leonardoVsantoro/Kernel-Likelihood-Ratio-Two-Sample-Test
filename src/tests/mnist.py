@@ -1,4 +1,4 @@
-# from modules import *
+ # from modules import *
 # from functions import *
 # ts = datetime.now().strftime("%Y-%m-%d_%H-%M")
 # os.makedirs(f'../out/mnist/{ts}', exist_ok=True)

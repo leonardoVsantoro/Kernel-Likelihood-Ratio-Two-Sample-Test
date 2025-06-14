@@ -395,6 +395,47 @@ def MODEL_8(alpha, eps):
 
 
 # -------------------------------------------------------------------------------------------------------- #
+import numpy as np
+
+# def MODEL_9(kappa):
+#     class themodel:
+#         __name__ = 'MODEL_9'
+#         def __init__(self, d, kappa = kappa):
+#             self.params = {'kappa': kappa}
+#             self.d = d
+#             self.mu = np.ones(d)/np.linalg.norm(np.ones(d))  
+
+#         def sample_X(self, n):
+#             return vonmises_fisher(self.mu, self.params['kappa']).rvs(n)
+
+#         def sample_Y(self, n):
+#             vecs = np.random.randn(n, self.d)
+#             vecs /= np.linalg.norm(vecs, axis=1, keepdims=True)
+#             return vecs
+#     return themodel
+
+
+def MODEL_9(kappa):
+    class themodel:
+        __name__ = 'MODEL_9'
+        def __init__(self, d, kappa = kappa):
+            self.params = {'kappa': kappa}
+            self.d = d
+            self.mu1 = np.ones(d)/np.linalg.norm(np.ones(d))  
+            mu2 = self.mu1.copy(); mu2[0] = -mu2[0]
+            self.mu2 = mu2   
+
+        def sample_X(self, n):
+            return vonmises_fisher(self.mu1, self.params['kappa']).rvs(n)
+
+        def sample_Y(self, n):
+            return vonmises_fisher(self.mu2, self.params['kappa']).rvs(n)
+
+    return themodel
+
+
+
+
 # -------------------------------------------------------------------------------------------------------- #
 
 lsmodels = []
@@ -410,3 +451,37 @@ lsmodels.append((MODEL_8 , {'alpha' : 0.5, 'eps' : 0.05}))
 
 
 
+
+def GAUSSIAN_MEAN_SHIFT(mu):
+    class themodel:
+        __name__ = 'Gaussian - mean shift'
+        def __init__(self, d):
+            self.params = {'mu': mu}
+            self.d = d
+            self.location = np.zeros(d)
+            self.shift = np.ones(d) * mu
+            self.scale = 1.0
+        def sample_X(self, n):
+            return np.random.normal(loc=self.location, scale=self.scale, size=(n, self.d))
+        def sample_Y(self, n):
+            return np.random.normal(loc=self.shift, scale=self.scale, size=(n, self.d))
+    return themodel
+
+
+def CAUCHY(mu):
+    class themodel:
+        __name__ = 'Cauchy - location shift'
+        def __init__(self, d):
+            self.params = {'mu': mu}
+            self.d = d
+            self.location = np.zeros(d)
+            self.shift = np.ones(d)*mu
+            self.scale = 1.0
+
+        def sample_X(self, n):
+            return np.random.standard_cauchy((n, self.d)) * self.scale + self.location
+
+        def sample_Y(self, n):
+            return np.random.standard_cauchy((n, self.d)) * self.scale + self.shift
+
+    return themodel

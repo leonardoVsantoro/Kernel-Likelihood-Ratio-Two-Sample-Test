@@ -2,4 +2,4 @@
 from .utils import *
 from .tests import *
 from .run import *
-from .exploratory.exploratory import *
+from .exploratory import *

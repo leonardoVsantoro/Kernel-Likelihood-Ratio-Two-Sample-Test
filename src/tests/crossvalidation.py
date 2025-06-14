@@ -1,20 +1,29 @@
+# Set working directory to the parent folder of this script
+import os
+import sys
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+os.chdir(parent_dir)
+sys.path.insert(0, parent_dir)
 from modules import *
 from functions import *
+
 import models.models_classes as models
 ts = datetime.now().strftime("%Y-%m-%d_%H:%M")
+
 # ------------------------------ set parameters ---------------------------------------------------------------------------------------------------------------------
 NUM_CORES = 72
 n, d = 50, 250
 N_iters = 100
 num_permutations = 250
 kernel_name = 'sqeuclidean'
-band_factor_ls = np.logspace(-3, 3, 7)
+band_factor_ls = [0.01, 0.05, 0.1, 0.5, 1, 5, 10]
 ridge_ls = np.logspace(-9, -1, 9)
 
 # NUM_CORES = 4; n,d = 5,100; N_iters = 2; num_permutations = 2; band_factor_ls = [1]; ridge_ls = [1]
 # ------------------------------ run -------------------------------------------------------------------------------------------------------------------------------
 summary = ''
-for _model_,model_params in models.lsmodels[-2:]:
+for _model_,model_params in models.lsmodels:
     tqdm.write(f"Running model: {_model_.__name__} with parameters: {model_params}")
     results = []
     for band_factor in band_factor_ls:

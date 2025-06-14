@@ -1,3 +1,9 @@
+import os
+import sys
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+os.chdir(parent_dir)
+sys.path.insert(0, parent_dir)
 from modules import *
 from functions import *
 import models.models_classes as models
@@ -6,15 +12,14 @@ ts = datetime.now().strftime("%Y-%m-%d_%H:%M")
 
 # --------- set parameters ---------------------------------------------------------------------------------------------------------------------
 NUM_CORES = 72
-n = 100
+n = 50
 n_d_values = [(n, 25),(n, 50),(n, 250),(n, 500),(n, 1000),(n, 1500), (n, 2000)]
-n = 150
+n = 100
 n_d_values += [(n, 25),(n, 50),(n, 250),(n, 500),(n, 1000),(n, 1500),(n, 2000)]
 num_permutations = 250
 N_iters = 100
-ridge = [0.1, 0.5, 1, 5, 10]
-band_factor = [0.1, 0.25, 0.5, 0.75]
-# band_factor = [0.5]
+band_factor= [0.05, 0.1, 0.5, 1, 5]
+ridge = np.logspace(-9, -1, 9)
 kernel_name = 'sqeuclidean'
 # --------- run -------------------------------------------------------------------------------------------------------------------------------
 # testvals
@@ -25,7 +30,7 @@ output_dir = f'../out/sims/{ts}'
 os.makedirs(output_dir, exist_ok=True)
 summary = ''
 
-for _model_,model_params in models.lsmodels:
+for _model_,model_params in [models.lsmodels[-1]]:
     model_name = _model_.__name__
     lsout.append(f'{output_dir}/{model_name}.csv')
     tqdm.write(f"Running model: {_model_.__name__} with parameters: {model_params}")
@@ -72,7 +77,7 @@ for file,title in zip(lsout, titles):
     for n, ax in zip(ns, axs):
         subset = df[df['sample size'] == n]
         sns.lineplot(data=subset, x="dimension", y="rejection rate", hue="test", style="test", marker='o', dashes=True, ax=ax, alpha = .75, lw=1.5)
-        for test in ['KLR', 'KLR0']:
+        for test in ['KLR', 'KLR-0']:
             if test in subset['test'].values:
                 klr_data = subset[subset['test'] == test]
                 ax.plot( klr_data['dimension'], klr_data['rejection rate'],  linewidth=10, alpha=0.15,color=ax.get_lines()[list(tests).index(test)].get_color(), zorder=1)
@@ -84,7 +89,7 @@ for file,title in zip(lsout, titles):
         ax.tick_params(labelsize=11)
         ax.get_legend().remove()
         ax.set_xticks(ds)
-        ax.set_xticklabels(ds, fontsize=11)
+        ax.set_xticklabels(ds, fontsize=11, rotation=90)
         ax.set_ylim(-0.025, 1.025)
     fig.legend(axs[0].get_legend_handles_labels()[0], axs[0].get_legend_handles_labels()[1], 
             loc='upper center', bbox_to_anchor=(0.5, -0.01), ncol=len(tests), fontsize=11)
@@ -93,7 +98,6 @@ for file,title in zip(lsout, titles):
 
     output_dir = f'../out/sims/{ts}/'
     os.makedirs(output_dir, exist_ok=True)
-    model_name = file.split('/')[-1].split('.')[0]
     fig.savefig(f'{output_dir}/{model_name}.png', bbox_inches='tight')
 
     
