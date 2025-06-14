@@ -60,7 +60,7 @@ The `tests/` directory contains simulation code and unit tests for different com
 To execute a two-sample test:
 
 ```bash
-python tests/run/run.py
+python tests/sims.py
 ```
 
 This will:
