@@ -90,7 +90,6 @@ def efficient_cov_eigdec(X):
     eigvecs (ndarray): Eigenvectors of X.T @ X.
     """
     n, d = X.shape
-
     if n >= d:
         S, U, Vt = np.linalg.svd(X, full_matrices=False)
         eigvals = S**2/n
@@ -99,7 +98,6 @@ def efficient_cov_eigdec(X):
         S, U, Vt = np.linalg.svd(X.T, full_matrices=False)
         eigvals = S**2/n
         eigvecs = U
-
     return eigvals, eigvecs
 
 def reorder_kernel(kernel_matrix, permuted_indices_1, permuted_indices_2):
