@@ -1,6 +1,4 @@
-from modules import *
-from functions.utils import *
-
+from src import *
 def spiked_covariance(d, num_spikes=1, spike_value=10, template_cov=None):
     if template_cov is None:
         cov_matrix = np.eye(d)

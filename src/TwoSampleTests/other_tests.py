@@ -1,5 +1,5 @@
-from modules import *
-from functions.utils import *
+from src.modules import *
+from src.utils import *
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
