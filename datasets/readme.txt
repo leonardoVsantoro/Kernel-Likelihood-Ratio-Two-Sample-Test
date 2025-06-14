@@ -1,1 +1,0 @@
-You may download the mnist dataset (mnist_test.csv and mnist_train.csv) for instance from https://www.tensorflow.org/datasets/catalog/mnist

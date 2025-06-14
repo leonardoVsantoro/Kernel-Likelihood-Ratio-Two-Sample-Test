@@ -1,4 +1,4 @@
-from modules import *
+from src import *
 def plot(folder):
     path = f'../out/sims/{folder}'
     csv_files = [f for f in os.listdir(path) if f.endswith('.csv')]
