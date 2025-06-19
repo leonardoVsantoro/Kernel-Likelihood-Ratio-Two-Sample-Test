@@ -1,6 +1,2 @@
 .venv/
-bckpcode/
-datasets/MNIST
-snippets.ipynb
-plot_results.ipynb
-MNIST.ipynb
+none.ipynb

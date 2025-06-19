@@ -18,6 +18,5 @@ import seaborn as sns  # type: ignore
 from matplotlib.ticker import ScalarFormatter # type: ignore
 from tqdm import tqdm# type: ignore
 from scipy.ndimage import gaussian_filter# type: ignore
-import math
-from scipy.stats import vonmises_fisher
-
+import math# type: ignore
+from scipy.stats import vonmises_fisher# type: ignore

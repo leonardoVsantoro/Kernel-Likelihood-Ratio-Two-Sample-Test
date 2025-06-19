@@ -1,3 +1,4 @@
 # ---- local imports ----
 from .utils import *
-from .TwoSampleTests import *
+from .testing import *
+from .modules import *

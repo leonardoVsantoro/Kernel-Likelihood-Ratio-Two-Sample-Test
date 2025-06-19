@@ -1,6 +1,7 @@
 from src.modules import *
 from src.utils import *
 
+
 def split_kernel(kernel_matrix,n,m):
     kxx = kernel_matrix [:n, :n]
     kyy = kernel_matrix [m:, m:]
@@ -58,13 +59,13 @@ def CM_test_stat(kernel_matrix, n, m, ridge, symmetrise = True, project = True):
         vals.append(np.linalg.norm(inv_sqrtm_ED(SX_ED)@(mY-mX)))
     return np.array(vals)
 
-def mmd_test_stat(kernel_matrix, n, m, ridge = None):
+def mmd_test_stat(kernel_matrix, n, m, ridge = None, symmetrise = None, project = None):
     kxx, kyy, kxy = split_kernel(kernel_matrix, n, m)  
     np.fill_diagonal(kxx, 0); np.fill_diagonal(kyy, 0)
     obs_value = kxx.sum()/(n*(n-1)) +  kyy.sum()/(m*(m-1)) - 2* kxy.sum()/(n*m)
     return obs_value
 
-def spec_reg_mmd(kernel_matrix, n, m, ridge):
+def spec_reg_mmd(kernel_matrix, n, m, ridge, symmetrise = None, project = None):
     kxx, kyy, kxy = split_kernel(kernel_matrix, n, m)
     mX, mY = get_mvecs_X_Y(kxx, kxy, kyy)
     C = get_Cmat(kernel_matrix)
@@ -91,6 +92,7 @@ def KernelTwoSampleTest(name):
 
     test_function = {
         'MMD': mmd_test_stat,
+        'Agg-MMD': mmd_test_stat,
         'SpecReg-MMD': spec_reg_mmd,
         'KLR': KLR_test_stat,
         'KLR-0': KLR0_test_stat,
@@ -121,7 +123,9 @@ def KernelTwoSampleTest(name):
         def __init__(self, X, Y, 
                      kernel_name = 'sqeuclidean', 
                      band_factor_ls = [0.05, 0.1, 0.5, 1, 5],
-                     ridge_ls = 1):
+                     ridge_ls = [0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5],
+                     symmetrise = True,
+                     project = True):
             """
             Initialize the test class.
             Parameters:
@@ -131,6 +135,8 @@ def KernelTwoSampleTest(name):
             band_factor_ls (list): List of bandwidth factors for the kernel.
             ridge_ls (list or float): List of ridge regularization parameters.
             """
+            self.symmetrise = symmetrise
+            self.project = project
             self.ridge_ls = ridge_ls if len(ridge_ls)>0 else [ridge_ls]
             self.band_factor_ls = band_factor_ls if len(band_factor_ls)>0 else [band_factor_ls]
             self.n = len(X); self.m = len(Y)
@@ -139,7 +145,7 @@ def KernelTwoSampleTest(name):
             pairwise_dists = cdist(fullsample, fullsample, kernel_name)
             bandwidth = 2 * np.median(pairwise_dists[pairwise_dists > 0]) 
             self.kernel_matrix  = { BF : np.exp( - pairwise_dists / (bandwidth*BF)) for BF in band_factor_ls}
-            self.obs_value =  { BF : test_stat(self.kernel_matrix[BF], n, m, ridge_ls).reshape(-1,1) for BF in band_factor_ls } 
+            self.obs_value =  { BF : test_stat(self.kernel_matrix[BF], n, m, ridge_ls, symmetrise, project).reshape(-1,1) for BF in band_factor_ls } 
             
         def __call__(self, num_permutations = 500, level = 0.05):
             """
@@ -161,6 +167,8 @@ def KernelTwoSampleTest(name):
                             self.kernel_matrix[BF][np.ix_(perm := np.random.permutation(self.n + self.m), perm)],
                             self.n, self.m,
                             self.ridge_ls,
+                            self.symmetrise, 
+                            self.project
                         )
                         for _ in range(num_permutations)
                     ]).reshape(-1, num_permutations)
