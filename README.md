@@ -1,6 +1,3 @@
-Of course! Here's a polished `README.md` with a clear note that the project is **work in progress**.
-
----
 
 # Kernel Likelihood Ratio Two-Sample Test
 
@@ -31,7 +28,7 @@ The implementation adaptively selects the kernel bandwith and regularisation rid
 |   |-- run/
 |
 |-- src/
-|   |-- TwoSampleTests/
+|   |-- testing/
 |   |-- utils/
 |   |-- modules/
 ```
@@ -50,9 +47,9 @@ The `tests/` directory contains simulation code and unit tests for different com
 
 ## 🔹 Main Components
 
-| ------------------------------------ | ------------------------------------------------------ |
-| `src/TwoSampleTests/kernel_tests.py` | main kernel likelihood ratio two-sample test           |
-| ------------------------------------ | ------------------------------------------------------ |
+| -------------------------------------- | ------------------------------------------------------ |
+| `src/TwoSampleTests/tests.py`          | main kernel likelihood ratio two-sample test           |
+| -------------------------------------- | ------------------------------------------------------ |
 ---
 
 ## 🔹 How to Run
@@ -66,7 +63,7 @@ python tests/sims.py
 This will:
 * generate samples from two distributions
 * apply kernel likelihood ratio two-sample test, compare it to known methods (AggMMD, Spec-Reg-MMD, FR, HT, Energy, ...)
-* output average rejection probability
+* output average rejection probability in tests/out/data and display it in a figure in tests/out/images
 
 ---
 
@@ -74,7 +71,6 @@ This will:
 ## 🔹 Contributors
 
 * **Author:** Leonardo Santoro
-* **Contributors:** Charles Dufur
 
 ---
 
