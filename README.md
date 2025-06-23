@@ -2,7 +2,7 @@
 # Kernel Likelihood Ratio Two-Sample Test
 
 This repository contains code for **Kernel Likelihood Ratio (KLR) Two-Sample Tests**, a statistical method for comparing two samples to determine whether they come from the same distribution.
-The approach leverages **kernel embeddings** of distributions to construct **regularized likelihood ratio statistics**. The method automatically selects:
+The approach leverages **kernel embeddings** of distributions to construct **regularized likelihood ratio statistics**.
 The implementation adaptively selects the kernel bandwith and regularisation ridge.
 
 > ⚠ **Work in progress:**
