@@ -17,7 +17,6 @@ d = 1000
 X = np.random.multivariate_normal(np.zeros(d), np.eye(d), n)
 Y = np.random.multivariate_normal(np.zeros(d), np.eye(d), n)
 # --------- run different tests and store results -----------------------------------------------------------------
-out = []
 keriterargs_dict = {'X' : X, 
                     'Y': Y,
                     'kernel_name': kernel_name,

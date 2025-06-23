@@ -21,7 +21,7 @@ The implementation adaptively selects the kernel bandwith and regularisation rid
 |   |-- test.py
 |
 |-- src/
-|   |-- testing/
+|   |-- twosample/
 |   |-- utils/
 |   |-- modules/
 |
