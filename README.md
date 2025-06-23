@@ -53,18 +53,12 @@ python tests/test.py
 ```
 
 This will:
-* Generate synthetic data from two distributions
+* Generate synthetic data from two (identical) distributions
 * apply KLR test, compare it to known methods (AggMMD, Spec-Reg-MMD, FR, HT, ...)
 * output p-value for each test 
 
 ---
 
-
-## 🔹 Contributors
-
-* **Author:** Leonardo Santoro
-
----
 
 ## 🔹 References
 
