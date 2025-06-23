@@ -46,9 +46,46 @@ def hall_tajvidi_test_stat(X, Y, k=10):
     test_stat = count / (k * len(Z))
     
     return test_stat
+def optmap(F,G, eigdec_F = None):
+    if eigdec_F is None:
+        UF, SF = EIG_DEC(F)
+    else:
+        UF, SF = eigdec_F
+    sqrtm_F = sqrtm_ED((UF, SF))
+    sqrtm_inv_F =  inv_sqrtm_ED((UF, SF))
+    return sqrtm_inv_F@sqrtm_ED(EIG_DEC(sqrtm_F@G@sqrtm_F))@sqrtm_inv_F
+def mpz_test_stat(X, Y, center = True):
+    """
+    Perform the Masarotto-Panaretos-Zemel for equality of (centered) distributions.
+    
+    Parameters:
+    X (np.ndarray): Sample from the first distribution, shape (n, d).
+    Y (np.ndarray): Sample from the second distribution, shape (m, d).
+    center (bool): If True, center the samples before computing the test statistic.
+    
+    Returns:
+    float: Test statistic
+    """
+    if center:
+        X = X - X.mean(0)
+        Y = Y - Y.mean(0)
+    d = X.shape[1]
 
+    SX, UX = efficient_cov_eigdec(X - X.mean(0))
+    SY, UY = efficient_cov_eigdec(Y - Y.mean(0))
 
-class FR_two_sample_test:
+    sqrtm_CX = sqrtm_ED((SX, UX))
+    sqrtm_inv_CX = inv_sqrtm_ED((SX, UX))
+    
+    S_MT, U_MT  = EIG_DEC(sqrtm_CX @ (np.cov(Y.T)) @ sqrtm_CX)
+    otmap_XY = sqrtm_inv_CX@sqrtm_ED((S_MT, U_MT))@sqrtm_inv_CX
+
+    otmap_YX = sqrtm_CX@inv_sqrtm_ED((S_MT, U_MT))@sqrtm_CX
+
+    return np.linalg.norm( otmap_XY - np.eye(d),'fro') + np.linalg.norm(otmap_YX - np.eye(d),'fro')
+# ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+
+class FR:
     """
     Two-sample FR Smirnov test to determine if two samples come from the same distribution.
     Generalises the Kolmogorov-Smirnov test to the multivariate setting.
@@ -104,11 +141,13 @@ class FR_two_sample_test:
                     permuted_runs_count += 1
             permuted_stats.append(permuted_runs_count)
         permuted_stats = np.array(permuted_stats)
-        p_value = float(np.mean(permuted_stats <= self.obs_value)) # reversed here!
-        decision = 1 if p_value < 0.05 else 0
-        return decision, p_value
+        self.p_value = float(np.mean(permuted_stats <= self.obs_value)) # reversed here!
+        self.decision = 1 if self.p_value < 0.05 else 0
+        self.permuted_stats = permuted_stats
+        return self
+    
         
-class KNN_two_sample_test:
+class KNN:
     """
     Two-sample KNN test to determine if two samples come from the same distribution.
 
@@ -142,7 +181,7 @@ class KNN_two_sample_test:
         self.labels = labels
         self.obs_value = obs_value
 
-    def __call__(self, num_permutations=1000, return_stats=False):
+    def __call__(self, num_permutations=1000):
         """
         Perform the permutation test and return the p-value.
 
@@ -163,12 +202,13 @@ class KNN_two_sample_test:
                 permuted_count += sum(permuted_labels[i] == permuted_labels[neighbors])
             permuted_stats.append(permuted_count / (self.k * (n + m)))
         permuted_stats = np.array(permuted_stats)
-        p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
-        decision = 1 if p_value < 0.05 else 0
-        return decision, p_value
+        self.p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
+        self.decision = 1 if self.p_value < 0.05 else 0
+        self.permuted_stats = permuted_stats
+        return self
 
 
-class HT_two_sample_test:
+class HT:
     """
     Two-sample Hall and Tajvidi nearest-neighbor test for equality of distributions.
     Based on [ Hall and Tajvidi, '02]
@@ -216,51 +256,15 @@ class HT_two_sample_test:
             _Y = self.Z[permuted_indices[n:]]
             permuted_stats.append( hall_tajvidi_test_stat(_X,_Y,self.k))
 
-        p_value = float(np.mean(np.array(permuted_stats) <= self.obs_value)) #reversed here!
-        decision = 1 if p_value < 0.05 else 0
-        return decision, p_value
+        self.p_value = float(np.mean(np.array(permuted_stats) <= self.obs_value)) #reversed here!
+        self.decision = 1 if self.p_value < 0.05 else 0
+        self.permuted_stats = -np.array(permuted_stats)
+        self.obs_value = -self.obs_value
+        return self
 
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
 
-def optmap(F,G, eigdec_F = None):
-    if eigdec_F is None:
-        UF, SF = EIG_DEC(F)
-    else:
-        UF, SF = eigdec_F
-    sqrtm_F = sqrtm_ED((UF, SF))
-    sqrtm_inv_F =  inv_sqrtm_ED((UF, SF))
-    return sqrtm_inv_F@sqrtm_ED(EIG_DEC(sqrtm_F@G@sqrtm_F))@sqrtm_inv_F
-def mpz_test_stat(X, Y, center = True):
-    """
-    Perform the Masarotto-Panaretos-Zemel for equality of (centered) distributions.
-    
-    Parameters:
-    X (np.ndarray): Sample from the first distribution, shape (n, d).
-    Y (np.ndarray): Sample from the second distribution, shape (m, d).
-    center (bool): If True, center the samples before computing the test statistic.
-    
-    Returns:
-    float: Test statistic
-    """
-    if center:
-        X = X - X.mean(0)
-        Y = Y - Y.mean(0)
-    d = X.shape[1]
-
-    SX, UX = efficient_cov_eigdec(X - X.mean(0))
-    SY, UY = efficient_cov_eigdec(Y - Y.mean(0))
-
-    sqrtm_CX = sqrtm_ED((SX, UX))
-    sqrtm_inv_CX = inv_sqrtm_ED((SX, UX))
-    
-    S_MT, U_MT  = EIG_DEC(sqrtm_CX @ (np.cov(Y.T)) @ sqrtm_CX)
-    otmap_XY = sqrtm_inv_CX@sqrtm_ED((S_MT, U_MT))@sqrtm_inv_CX
-
-    otmap_YX = sqrtm_CX@inv_sqrtm_ED((S_MT, U_MT))@sqrtm_CX
-
-    return np.linalg.norm( otmap_XY - np.eye(d),'fro') + np.linalg.norm(otmap_YX - np.eye(d),'fro')
-
-class MPZ_two_sample_test:
+class MPZ:
     """
     Two-sample OT-based test to determine if two samples come from the same distribution.
     Based on [ Masarotto, Panaretos & Zemel, '24]
@@ -306,7 +310,8 @@ class MPZ_two_sample_test:
             _Y = self.Z[permuted_indices[n:]]
             permuted_stats.append( mpz_test_stat(_X,_Y))
 
-        p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
-        decision = 1 if p_value < 0.05 else 0
-        return decision, p_value
+        self.p_value = float(np.mean(np.array(permuted_stats) >= self.obs_value))
+        self.decision = 1 if self.p_value < 0.05 else 0
+        self.permuted_stats = permuted_stats
+        return self
 

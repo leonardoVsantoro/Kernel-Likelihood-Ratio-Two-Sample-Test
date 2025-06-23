@@ -76,7 +76,6 @@ def spec_reg_mmd(kernel_matrix, n, m, ridge, symmetrise = None, project = None):
     return np.array(vals)
     
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
-
 def KernelTwoSampleTest(name):
     """
     Factory function to create a two-sample kernel test class.
@@ -135,6 +134,7 @@ def KernelTwoSampleTest(name):
             band_factor_ls (list): List of bandwidth factors for the kernel.
             ridge_ls (list or float): List of ridge regularization parameters.
             """
+            self.fudge_factor = 1e-14
             self.symmetrise = symmetrise
             self.project = project
             self.ridge_ls = ridge_ls if len(ridge_ls)>0 else [ridge_ls]
@@ -145,9 +145,11 @@ def KernelTwoSampleTest(name):
             pairwise_dists = cdist(fullsample, fullsample, kernel_name)
             bandwidth = 2 * np.median(pairwise_dists[pairwise_dists > 0]) 
             self.kernel_matrix  = { BF : np.exp( - pairwise_dists / (bandwidth*BF)) for BF in band_factor_ls}
-            self.obs_value =  { BF : test_stat(self.kernel_matrix[BF], n, m, ridge_ls, symmetrise, project).reshape(-1,1) for BF in band_factor_ls } 
+            self.obs_values =  { 
+                BF : test_stat(self.kernel_matrix[BF], n, m, ridge_ls, symmetrise, project).reshape(-1,1) - self.fudge_factor
+                for BF in band_factor_ls } 
             
-        def __call__(self, num_permutations = 500, level = 0.05):
+        def __call__(self, num_permutations = 500, level = 0.05, NUM_CORES = 1):
             """
             Perform the permutation test and return the p-value.
 
@@ -157,27 +159,30 @@ def KernelTwoSampleTest(name):
             Returns:
             float: p-value of the test.
             """
-            p_values = [] 
+            p_values = []
+            all_permuted_stats = []
             for BF in self.band_factor_ls:
-                if np.abs(self.obs_value[BF]) < 1e-15:
-                    p_values += [1.0] * len(self.ridge_ls)
+                iter_args = [(self.kernel_matrix[BF][np.ix_(perm := np.random.permutation(self.n + self.m), perm)],
+                                self.n, self.m, self.ridge_ls, self.symmetrise, self.project) 
+                                for _ in range(num_permutations)]
+                permuted_stats = np.array(Parallel(n_jobs=NUM_CORES)(delayed(test_stat)(*args) for args in iter_args))
+                if len(self.obs_values[BF]) == 1:
+                    all_permuted_stats += [permuted_stats.flatten()]
                 else:
-                    permuted_stats = np.array([
-                        test_stat(
-                            self.kernel_matrix[BF][np.ix_(perm := np.random.permutation(self.n + self.m), perm)],
-                            self.n, self.m,
-                            self.ridge_ls,
-                            self.symmetrise, 
-                            self.project
-                        )
-                        for _ in range(num_permutations)
-                    ]).reshape(-1, num_permutations)
-                    
-                    p_values += list(np.mean(permuted_stats > self.obs_value[BF] , axis = 1).astype(float)) 
-
-            decision = 1 if min(p_values) < level/len(p_values) else 0
-            p_value = min(p_values)*len(self.ridge_ls)
-            return decision, p_value
+                    all_permuted_stats+= [_ for _ in permuted_stats.T]
+                p_values += list(np.mean(permuted_stats.reshape(-1, num_permutations) > self.obs_values[BF] , axis = 1).astype(float)) 
+            p_values = np.array(p_values).flatten()
+            self.decision = 1 if min(p_values) < level/len(p_values) else 0
+            self.p_value = min([1, min(p_values)*len(p_values)])
+            self.obs_value = np.concatenate(list(self.obs_values.values()))[np.argmin(p_values)][0]
+            self.permuted_stats = all_permuted_stats[ np.argmin(p_values) ]
+            return self
     return TestClass
     
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 
+
+KLR = KernelTwoSampleTest('KLR')
+KLR0 = KernelTwoSampleTest('KLR-0')
+CM = KernelTwoSampleTest('CM')
+Agg_MMD = KernelTwoSampleTest('Agg-MMD')
+SpecReg_MMD = KernelTwoSampleTest('SpecReg-MMD')

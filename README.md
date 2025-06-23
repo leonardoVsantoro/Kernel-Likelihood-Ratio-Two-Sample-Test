@@ -1,14 +1,12 @@
 
 # Kernel Likelihood Ratio Two-Sample Test
 
-This repository contains code for **Kernel Likelihood Ratio Two-Sample Tests**, a statistical method for comparing two samples to determine whether they come from the same distribution.
-The approach utilizes (Gaussian) kernel embeddings to construct likelihood ratio statistics for two-sample testing.
+This repository contains code for **Kernel Likelihood Ratio (KLR) Two-Sample Tests**, a statistical method for comparing two samples to determine whether they come from the same distribution.
+The approach leverages **kernel embeddings** of distributions to construct **regularized likelihood ratio statistics**. The method automatically selects:
 The implementation adaptively selects the kernel bandwith and regularisation ridge.
 
 > ⚠ **Work in progress:**
 > This repository is under active development.
-> The code may be incomplete, and the API may change frequently.
-> Please check back for future updates.
 
 ---
 
@@ -17,53 +15,47 @@ The implementation adaptively selects the kernel bandwith and regularisation rid
 ```
 .
 |-- requirements.txt
-|-- out/
-|   |-- images/
-|   |-- data/
+|-- README.md
 |
 |-- tests/
-|   |-- sims.py
-|   |-- plot/
-|   |-- models/
-|   |-- run/
+|   |-- test.py
 |
 |-- src/
 |   |-- testing/
 |   |-- utils/
 |   |-- modules/
+|
+|-- notebooks/
+|   |-- pilot.ipynb
 ```
 
 ---
+
+
+## 📊 Pilot Notebook
+
+A **pilot notebook** is provided for:
+
+* Introducing the **theory** behind the KLR test
+* Illustrating the **code structure**
+* Providing **example usage** with visualizations
+
+📄 **Location**: `notebooks/pilot.ipynb`
+
 
 ## 🔹 Tests and Simulations
 
-The `tests/` directory contains simulation code and unit tests for different components of the kernel likelihood ratio two-sample test.
-
-* **sims.py:** simulation routines
-* **run/** directory contains `run.py` for executing test scenarios with fast parallelisation
-* **models/** directory contains kernel models for likelihood ratio testing
-
----
-
-## 🔹 Main Components
-
-| -------------------------------------- | ------------------------------------------------------ |
-| `src/TwoSampleTests/tests.py`          | main kernel likelihood ratio two-sample test           |
-| -------------------------------------- | ------------------------------------------------------ |
----
-
-## 🔹 How to Run
-
-To execute a two-sample test:
+The `tests/` directory contains unit test for the kernel likelihood ratio two-sample test,
+comparing KLR(-0) with classical and state of the art methods, in a dummy Gaussian model with scale shift.
 
 ```bash
-python tests/sims.py
+python tests/test.py
 ```
 
 This will:
-* generate samples from two distributions
-* apply kernel likelihood ratio two-sample test, compare it to known methods (AggMMD, Spec-Reg-MMD, FR, HT, Energy, ...)
-* output average rejection probability in tests/out/data and display it in a figure in tests/out/images
+* Generate synthetic data from two distributions
+* apply KLR test, compare it to known methods (AggMMD, Spec-Reg-MMD, FR, HT, ...)
+* output p-value for each test 
 
 ---
 
