@@ -117,7 +117,6 @@ This will:
 
 
 ## 📚 Theory in a nutshell
-
 The procedure relies on the observation that testing for the equality of probability distributions can be translated to testing for the *mutual singularity* of  **suitable Gaussian measures** on a RKHS. That is:
 $$
 P \neq Q \Longleftrightarrow \mathcal{N}_P \perp \mathcal{N}_Q
@@ -125,18 +124,11 @@ $$
 where $\mathcal{N}_P$ is the gaussian measure with mean and covariance given by $E[k_X]$ and $E[k_X\otimes k_X]$, respectively, for $X\sim P$ and $k_X$ the kernel feature map.
 
 In light of this, we naturally consider as test statistic the empirical regularized Kullblack-Leibler divergence  between the kernel Gaussian embeddings $\mathcal{N}_P$ and $\mathcal{N}_P$, namely  $D_{\gamma, \mathrm{KL}} \big( \mathcal{N}_{P} \:||\:  \mathcal{N}_{P} \big) $
-for some **regularisation parameter** $\gamma$ .
-
-<!-- $$
-    D_{\gamma, \mathrm{KL}} \big( \mathcal{N}_{P} \:||\:  \mathcal{N}_{P} \big) 
-    =
-    \frac{1}{2}\| (S_{Q} + \gamma I)^{-\frac{1}{2}} (m_{P} - m_{Q}) \|^2 
-     +  \frac{1}{2}d_{\textrm{logdet}}^1(S_{P} + \gamma I,S_{Q} + \gamma I) 
-$$ -->
+for some **regularisation parameter** $\gamma$.
 
 
+```latex
 #### 🔧 Implementation
-
 Given i.i.d. samples $X_1,\dots,X_n \sim P$ and $Y_1,\dots,Y_m\sim Q$, all quantities appearing in the above expression are estimated from (linear/quadratic forms of) the kernel matrices. Defining:
 $$
     m_X = \frac{1}{n}\begin{bmatrix}
@@ -179,6 +171,7 @@ $$
 0 & \textnormal{otherwise}.
 \end{cases}
 $$
+```
 
 **NB**:
  The computational cost is primarily dominated by matrix inversion. Since the test threshold is determined via permutation testing, $B$ permutations result in a total cost of $O(BN^3)$.  
