@@ -167,16 +167,6 @@ K_{yy} K_{xy}^\top & K_{yy} K_{yy}^\top
 $$
 
 The null hypothesis is rejected if the test statistic
-
-$$
-T(\{X_{i}\}_{i=1}^{n}, \{Y_{j}\}_{j=1}^{m}) =
-\left\lVert (S_X + \gamma I)^{-\frac{1}{2}} (m_Y - m_X) \right\rVert
-+ \operatorname{trace} \left(
-\log \left( (S_X + \gamma I)^{-\frac{1}{2}} (S_Y + \gamma I) (S_X + \gamma I)^{-\frac{1}{2}} \right)
-- (S_Y + \gamma I)(S_X + \gamma I)^{-1} + I
-\right)
-$$
-
 exceeds the critical threshold $\hat{q}_{1-\alpha}$, which in practice is determined as the $(1 - \alpha)$-th quantile of the test statistic’s permutation distribution:
 
 $$
