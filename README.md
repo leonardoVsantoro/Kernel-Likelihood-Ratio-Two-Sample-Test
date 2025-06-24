@@ -127,7 +127,6 @@ In light of this, we naturally consider as test statistic the empirical regulari
 for some **regularisation parameter** $\gamma$.
 
 
-```latex
 #### 🔧 Implementation
 Given i.i.d. samples $X_1,\dots,X_n \sim P$ and $Y_1,\dots,Y_m\sim Q$, all quantities appearing in the above expression are estimated from (linear/quadratic forms of) the kernel matrices. Defining:
 $$
@@ -156,7 +155,7 @@ the null hypothesis is rejected if the test statistic
 $$
 T(\{X_{i}\}_{i=1}^{n}, \{Y_{j}\}_{j=1}^{m}) 
 =
-        \left\lVert (S_X+\gamma I)^{-\frac{1}{2}}(m_Y - m_X) \right\rVert  + \text{trace}\left(\log\left((S_X+\gamma I)^{-\frac{1}{2}}(S_Y+\gamma I)(S_X+\gamma I)^{-\frac{1}{2}}\right) - (S_Y+\gamma I)(S_X+\gamma I)^{-1} + I\right)
+\left\lVert (S_X+\gamma I)^{-\frac{1}{2}}(m_Y - m_X) \right\rVert  + \text{trace}\left(\log\left((S_X+\gamma I)^{-\frac{1}{2}}(S_Y+\gamma I)(S_X+\gamma I)^{-\frac{1}{2}}\right) - (S_Y+\gamma I)(S_X+\gamma I)^{-1} + I\right)
 $$
 exceeds the critical threshold $\hat{q}_{1-\alpha}$, which in practice is determined as the $(1-\alpha)$-th quantile of the test statistic’s permutation distribution:  
 $$
@@ -171,7 +170,6 @@ $$
 0 & \textnormal{otherwise}.
 \end{cases}
 $$
-```
 
 **NB**:
  The computational cost is primarily dominated by matrix inversion. Since the test threshold is determined via permutation testing, $B$ permutations result in a total cost of $O(BN^3)$.  
