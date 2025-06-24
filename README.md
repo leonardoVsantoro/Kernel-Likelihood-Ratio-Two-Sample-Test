@@ -117,6 +117,7 @@ This will:
 
 
 ## 📚 Theory in a nutshell
+
 The procedure relies on the observation that testing for the equality of probability distributions can be translated to testing for the *mutual singularity* of  **suitable Gaussian measures** on a RKHS. That is:
 $$
 P \neq Q \Longleftrightarrow \mathcal{N}_P \perp \mathcal{N}_Q
@@ -126,8 +127,7 @@ where $\mathcal{N}_P$ is the gaussian measure with mean and covariance given by 
 In light of this, we naturally consider as test statistic the empirical regularized Kullblack-Leibler divergence  between the kernel Gaussian embeddings $\mathcal{N}_P$ and $\mathcal{N}_P$, namely  $D_{\gamma, \mathrm{KL}} \big( \mathcal{N}_{P} \:||\:  \mathcal{N}_{P} \big) $
 for some **regularisation parameter** $\gamma$.
 
-
-#### 🔧 Implementation
+## 🔧 Implementation
 Given i.i.d. samples $X_1,\dots,X_n \sim P$ and $Y_1,\dots,Y_m\sim Q$, all quantities appearing in the above expression are estimated from (linear/quadratic forms of) the kernel matrices. Defining:
 $$
     m_X = \frac{1}{n}\begin{bmatrix}
@@ -151,12 +151,7 @@ K_{xy}^{\phantom{\top}}K_{xy}^\top & K_{xy}^{\phantom{\top}}K_{yy}^\top \\
 K_{yy}^{\phantom{\top}}K_{xy}^\top & K_{yy}^{\phantom{\top}}K_{yy}^\top
 \end{bmatrix},
 $$
-the null hypothesis is rejected if the test statistic  
-$$
-T(\{X_{i}\}_{i=1}^{n}, \{Y_{j}\}_{j=1}^{m}) 
-=
-\left\lVert (S_X+\gamma I)^{-\frac{1}{2}}(m_Y - m_X) \right\rVert  + \text{trace}\left(\log\left((S_X+\gamma I)^{-\frac{1}{2}}(S_Y+\gamma I)(S_X+\gamma I)^{-\frac{1}{2}}\right) - (S_Y+\gamma I)(S_X+\gamma I)^{-1} + I\right)
-$$
+the null hypothesis is rejected if the test statistic
 exceeds the critical threshold $\hat{q}_{1-\alpha}$, which in practice is determined as the $(1-\alpha)$-th quantile of the test statistic’s permutation distribution:  
 $$
 \{T(\{Z_{\sigma(i)}\}_{i=1}^{n}, \{Z_{\sigma(j)}\}_{j=n+1}^{n+m}): \sigma \in S\},
