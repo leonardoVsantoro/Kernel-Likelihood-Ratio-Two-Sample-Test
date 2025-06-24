@@ -115,60 +115,90 @@ This will:
 * output p-value for each test 
 
 
-
 ## 📚 Theory in a nutshell
 
-The procedure relies on the observation that testing for the equality of probability distributions can be translated to testing for the *mutual singularity* of  **suitable Gaussian measures** on a RKHS. That is:
+The procedure relies on the observation that testing for the equality of probability distributions can be translated to testing for the *mutual singularity* of **suitable Gaussian measures** on a RKHS. That is:
+
 $$
 P \neq Q \Longleftrightarrow \mathcal{N}_P \perp \mathcal{N}_Q
 $$
-where $\mathcal{N}_P$ is the gaussian measure with mean and covariance given by $E[k_X]$ and $E[k_X\otimes k_X]$, respectively, for $X\sim P$ and $k_X$ the kernel feature map.
 
-In light of this, we naturally consider as test statistic the empirical regularized Kullblack-Leibler divergence  between the kernel Gaussian embeddings $\mathcal{N}_P$ and $\mathcal{N}_P$, namely  $D_{\gamma, \mathrm{KL}} \big( \mathcal{N}_{P} \:||\:  \mathcal{N}_{P} \big) $
-for some **regularisation parameter** $\gamma$.
+where $\mathcal{N}_P$ is the Gaussian measure with mean and covariance given by $\mathbb{E}[k_X]$ and $\mathbb{E}[k_X \otimes k_X]$, respectively, for $X \sim P$ and $k_X$ the kernel feature map.
 
-## 🔧 Implementation
-Given i.i.d. samples $X_1,\dots,X_n \sim P$ and $Y_1,\dots,Y_m\sim Q$, all quantities appearing in the above expression are estimated from (linear/quadratic forms of) the kernel matrices. Defining:
+In light of this, we naturally consider as test statistic the empirical regularized Kullback–Leibler divergence between the kernel Gaussian embeddings $\mathcal{N}_P$ and $\mathcal{N}_Q$, namely  
+$D_{\gamma, \mathrm{KL}} \big( \mathcal{N}_{P} \:||\: \mathcal{N}_{Q} \big)$  
+for some **regularization parameter** $\gamma$.
+
+<!--
 $$
-    m_X = \frac{1}{n}\begin{bmatrix}
-        K_{xx}\mathbf{1}_{n} \\
-        K_{xy}\mathbf{1}_{n}
-    \end{bmatrix} \qquad \quad
-    m_Y = \frac{1}{m}\begin{bmatrix}
-        K_{yx}\mathbf{1}_{m} \\
-        K_{yy}\mathbf{1}_{m}
-    \end{bmatrix}
+D_{\gamma, \mathrm{KL}} \big( \mathcal{N}_{P} \:||\: \mathcal{N}_{Q} \big) 
+=
+\frac{1}{2} \left\| (S_{Q} + \gamma I)^{-\frac{1}{2}} (m_{P} - m_{Q}) \right\|^2 
++ \frac{1}{2} \, d_{\textrm{logdet}}^1(S_{P} + \gamma I, S_{Q} + \gamma I)
 $$
+-->
+
+---
+
+### 🔧 Implementation
+
+Given i.i.d. samples $X_1, \dots, X_n \sim P$ and $Y_1, \dots, Y_m \sim Q$, all quantities appearing in the above expression are estimated from (linear/quadratic forms of) the kernel matrices. Defining:
+
 $$
-S_X = 
-\frac{1}{n}\begin{bmatrix}
-K_{xx}^{\phantom{\top}}K_{xx}^\top & K_{xx}^{\phantom{\top}}K_{yx}^\top \\
-K_{yx}^{\phantom{\top}}K_{xx}^\top & K_{yx}^{\phantom{\top}}K_{yx}^\top
+m_X = \frac{1}{n} \begin{bmatrix}
+K_{xx} \mathbf{1}_{n} \\
+K_{xy} \mathbf{1}_{n}
 \end{bmatrix} \qquad\quad
-S_Y = \,
-\frac{1}{m} \, \begin{bmatrix}
-K_{xy}^{\phantom{\top}}K_{xy}^\top & K_{xy}^{\phantom{\top}}K_{yy}^\top \\
-K_{yy}^{\phantom{\top}}K_{xy}^\top & K_{yy}^{\phantom{\top}}K_{yy}^\top
-\end{bmatrix},
+m_Y = \frac{1}{m} \begin{bmatrix}
+K_{yx} \mathbf{1}_{m} \\
+K_{yy} \mathbf{1}_{m}
+\end{bmatrix}
 $$
-the null hypothesis is rejected if the test statistic
-exceeds the critical threshold $\hat{q}_{1-\alpha}$, which in practice is determined as the $(1-\alpha)$-th quantile of the test statistic’s permutation distribution:  
+
 $$
-\{T(\{Z_{\sigma(i)}\}_{i=1}^{n}, \{Z_{\sigma(j)}\}_{j=n+1}^{n+m}): \sigma \in S\},
-$$  
-where $S$ is a random subsample of permutations $\sigma: [n+m] \to [n+m]$ where $[n+m]= \{1, \dots, n+m\}$.
-Finally, the test function is defined as  
+S_X = \frac{1}{n} \begin{bmatrix}
+K_{xx} K_{xx}^\top & K_{xx} K_{yx}^\top \\
+K_{yx} K_{xx}^\top & K_{yx} K_{yx}^\top
+\end{bmatrix} \qquad\quad
+S_Y = \frac{1}{m} \begin{bmatrix}
+K_{xy} K_{xy}^\top & K_{xy} K_{yy}^\top \\
+K_{yy} K_{xy}^\top & K_{yy} K_{yy}^\top
+\end{bmatrix}
 $$
-\delta(X,Y) = 
-\begin{cases} 
-1 & \textnormal{if } T(\{X_{i}\}_{i=1}^{n}, \{Y_{j}\}_{j=1}^{m}) > \hat{q}_{1-\alpha}, \\ 
-0 & \textnormal{otherwise}.
+
+The null hypothesis is rejected if the test statistic
+
+$$
+T(\{X_{i}\}_{i=1}^{n}, \{Y_{j}\}_{j=1}^{m}) =
+\left\lVert (S_X + \gamma I)^{-\frac{1}{2}} (m_Y - m_X) \right\rVert
++ \operatorname{trace} \left(
+\log \left( (S_X + \gamma I)^{-\frac{1}{2}} (S_Y + \gamma I) (S_X + \gamma I)^{-\frac{1}{2}} \right)
+- (S_Y + \gamma I)(S_X + \gamma I)^{-1} + I
+\right)
+$$
+
+exceeds the critical threshold $\hat{q}_{1-\alpha}$, which in practice is determined as the $(1 - \alpha)$-th quantile of the test statistic’s permutation distribution:
+
+$$
+\left\{ T\left(\{Z_{\sigma(i)}\}_{i=1}^{n}, \{Z_{\sigma(j)}\}_{j=n+1}^{n+m}\right) : \sigma \in S \right\}
+$$
+
+where $S$ is a random subsample of permutations $\sigma : [n+m] \to [n+m]$, and $[n+m] = \{1, \dots, n+m\}$.
+
+Finally, the test function is defined as:
+
+$$
+\delta(X, Y) =
+\begin{cases}
+1 & \textnormal{if } T(\{X_{i}\}_{i=1}^{n}, \{Y_{j}\}_{j=1}^{m}) > \hat{q}_{1-\alpha} \\
+0 & \textnormal{otherwise}
 \end{cases}
 $$
 
-**NB**:
- The computational cost is primarily dominated by matrix inversion. Since the test threshold is determined via permutation testing, $B$ permutations result in a total cost of $O(BN^3)$.  
+---
 
+**NB**:  
+The computational cost is primarily dominated by matrix inversion. Since the test threshold is determined via permutation testing, $B$ permutations result in a total cost of $O(BN^3)$.
 
-In practice, a bandwith for the kernel needs to be chosen, as well as the ridge regularisation parameter $\gamma$. These are selected **adaptively** in the testing procedure, with Bonferroni correction to account for multiple testing
+In practice, a bandwidth for the kernel needs to be chosen, as well as the ridge regularization parameter $\gamma$. These are selected **adaptively** in the testing procedure, with Bonferroni correction to account for multiple testing.
 
