@@ -21,8 +21,10 @@ def KLR0_test_stat(kernel_matrix, n, m, ridge, symmetrise = True, project = True
         SY = projection_matrix @ SY @ projection_matrix.T
     vals = []
     for r in ridge:
-        eigvals_SX+= r; SX_ED = (eigvals_SX, eigvecs_SX)
-        vals.append( np.linalg.norm(inv_sqrtm_ED(SX_ED)@ (SY - SX) @ inv_sqrtm_ED(SX_ED),'fro'))
+        eigvals_shifted_SX = eigvals_SX + r
+        SX_ED = (eigvals_shifted_SX, eigvecs_SX)
+        inv_sqrt = inv_sqrtm_ED(SX_ED)
+        vals.append( np.linalg.norm(inv_sqrt @ (SY - SX) @ inv_sqrt,'fro'))
     return np.array(vals)
 
 def KLR_test_stat(kernel_matrix, n, m, ridge, symmetrise = True, project = True):
@@ -38,8 +40,10 @@ def KLR_test_stat(kernel_matrix, n, m, ridge, symmetrise = True, project = True)
         SY = projection_matrix @ SY @ projection_matrix.T
     vals = []
     for r in ridge:
-        eigvals_SX+= r; SX_ED = (eigvals_SX, eigvecs_SX)
-        vals.append( np.linalg.norm(inv_sqrtm_ED(SX_ED)@(mY-mX)) + np.abs(logdet2(inv_sqrtm_ED(SX_ED)@ (SY - SX) @ inv_sqrtm_ED(SX_ED))))
+        eigvals_shifted_SX = eigvals_SX + r
+        SX_ED = (eigvals_shifted_SX, eigvecs_SX)
+        inv_sqrt = inv_sqrtm_ED(SX_ED)
+        vals.append(np.linalg.norm(inv_sqrt @ (mY - mX)) + np.abs(logdet2(inv_sqrt @ (SY - SX) @ inv_sqrt)))
     return np.array(vals)
 
 def CM_test_stat(kernel_matrix, n, m, ridge, symmetrise = True, project = True):
@@ -55,7 +59,8 @@ def CM_test_stat(kernel_matrix, n, m, ridge, symmetrise = True, project = True):
         SY = projection_matrix @ SY @ projection_matrix.T
     vals = []
     for r in ridge:
-        eigvals_SX+= r; SX_ED = (eigvals_SX, eigvecs_SX)
+        eigvals_shifted_SX = eigvals_SX + r
+        SX_ED = (eigvals_shifted_SX, eigvecs_SX)
         vals.append(np.linalg.norm(inv_sqrtm_ED(SX_ED)@(mY-mX)))
     return np.array(vals)
 
@@ -70,9 +75,9 @@ def spec_reg_mmd(kernel_matrix, n, m, ridge, symmetrise = None, project = None):
     mX, mY = get_mvecs_X_Y(kxx, kxy, kyy)
     C = get_Cmat(kernel_matrix)
     vals = []
+    C_ED = np.linalg.eigh(C)   
     for r in ridge:
-        C_ED = EIG_DEC(C + np.eye(C.shape[0]) * r)   
-        vals.append(np.linalg.norm(inv_sqrtm_ED(C_ED)@(mY-mX)))
+        vals.append(np.linalg.norm(inv_sqrtm_ED((C_ED[0] + r, C_ED[1]))@(mY-mX)))
     return np.array(vals)
     
 # ------------------------ # ------------------------ # ------------------------ # ------------------------ 

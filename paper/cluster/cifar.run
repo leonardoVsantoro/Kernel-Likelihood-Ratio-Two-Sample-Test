@@ -1,0 +1,29 @@
+#!/bin/bash -l
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=72
+#SBATCH --mem=60G
+#SBATCH --time=24:00:00
+
+# Load required modules
+module load gcc/13.2.0
+module load python/3.11.7
+
+# Add ~/.local paths to PATH and PYTHONPATH
+export PATH="$HOME/.local/bin:$PATH"
+export PYTHONPATH="$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH"
+
+# Ensure pip is available
+if ! python -m pip --version &> /dev/null; then
+    echo "Installing pip..."
+    curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    python get-pip.py --user
+fi
+
+# Install required packages
+python -m pip install --upgrade pip --user
+python -m pip install --user numpy scipy pandas joblib scikit-learn tqdm matplotlib seaborn
+python -m pip install --user torch torchvision
+
+# Run the script
+python src/real/cifar.py
