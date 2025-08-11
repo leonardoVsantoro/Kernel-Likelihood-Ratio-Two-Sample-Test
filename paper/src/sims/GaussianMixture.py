@@ -1,4 +1,4 @@
-null = True #set if run under H0 or H1
+null = False #set if run under H0 or H1
 import os
 import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -11,10 +11,10 @@ os.makedirs(output_dir, exist_ok=True)
 # --------- set parameters ---------------------------------------------------------------------------------------------------------------------
 NUM_CORES = 72
 
-num_permutations = 200
+num_permutations = 300
 N_iters = 200
-ridge_ls = np.logspace(-7, 0, 8)
-band_factor_ls = [0.05, 0.1, 1, 5,10]
+ridge_ls = np.logspace(-6, 0, 7)
+band_factor_ls = [0.05, 0.1, 1, 5, 10]
 kernel_name = 'sqeuclidean'
 # --------- set model parameters ---------------------------------------------------------------------------------------------------------------------
 n = 100

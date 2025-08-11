@@ -1,3 +1,4 @@
+null = True #set if run under H0 or H1
 import os
 import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -36,7 +37,7 @@ fake_mnist = fake_mnist.apply(lambda x: (x - x.mean()) / x.std(), axis=1)
 
 N_iters = 72
 NUM_CORES = 72
-num_permutations = 200
+num_permutations = 300
 kernel_name = 'euclidean'
 ridge_ls = np.logspace(-7, 0, 8)
 band_factor_ls = [0.1, 1, 10]
@@ -48,7 +49,7 @@ for sample_size in sample_sizes:
     out = run_fast_parallel_sampling(
         real_mnist, fake_mnist, sample_size,
         num_permutations, N_iters, NUM_CORES,
-        kernel_name, ridge_ls, band_factor_ls, light=False
+        kernel_name, ridge_ls, band_factor_ls, light=False, null = null
     )
     df = pd.DataFrame(out).mean(0).rename('rejection_rate').to_frame()
     df['sample_size'] = sample_size
@@ -56,4 +57,10 @@ for sample_size in sample_sizes:
     results.append(df)
 
 final_df = pd.concat(results, ignore_index=True)
-final_df.to_csv('../out/real/mnist.csv', index=False)
+
+
+if null: # type: ignore
+    _name = 'mnist-null'
+else:
+    _name = 'mnist'
+final_df.to_csv(f'../out/real/{_name}.csv', index=False)

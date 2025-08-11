@@ -64,7 +64,7 @@ def regularize_to_condition_number(A, max_condition_number=1e9):
 
 
 def update_dict(original, kernel_matrix, ridge_ls, BF):
-    max_cond_number = 1e10
+    max_cond_number = 1e9
     islist = original.default_factory == list
     n =  kernel_matrix.shape[0]//2; m = n
     # project_dim = n 
@@ -160,14 +160,24 @@ def run_fast(X,Y, num_permutations, kernel_name, ridge_ls, band_factor_ls, light
 
 def run_fast_parallel(n, d,  _model_, model_params, num_permutations, N_iters, NUM_CORES, kernel_name, ridge, band_factor , null=False, light = False, print_results = False):
     XY = []
+    # for _ in range(N_iters):
+    #     X = _model_(**model_params)(d).sample_X(n)
+    #     Y = _model_(**model_params)(d).sample_Y(n)
+    #     if null:
+    #         Z = np.concatenate([X, Y])
+    #         np.random.shuffle(Z)
+    #         X = Z[:n]
+    #         Y = Z[n:]
+    #     XY.append((X, Y))
+    if null:
+        light = True
     for _ in range(N_iters):
-        X = _model_(**model_params)(d).sample_X(n)
-        Y = _model_(**model_params)(d).sample_Y(n)
         if null:
-            Z = np.concatenate([X, Y])
-            np.random.shuffle(Z)
-            X = Z[:n]
-            Y = Z[n:]
+            X = _model_(**model_params)(d).sample_X(n)
+            Y = _model_(**model_params)(d).sample_X(n)
+        else:
+            X = _model_(**model_params)(d).sample_X(n)
+            Y = _model_(**model_params)(d).sample_Y(n)
         XY.append((X, Y))
     iter_args = [(X, Y, num_permutations, kernel_name, ridge, band_factor, light) for X,Y in XY]
     out = Parallel(n_jobs=NUM_CORES)(delayed(run_fast)(*args) for args in iter_args)
@@ -183,7 +193,12 @@ def run_fast_parallel(n, d,  _model_, model_params, num_permutations, N_iters, N
 
 
 
-def run_fast_parallel_sampling(Xpd,Ypd, sample_size, num_permutations, N_iters, NUM_CORES, kernel_name, ridge, band_factor , light = False, print_results = False):
+def run_fast_parallel_sampling(Xpd,Ypd, sample_size, num_permutations, N_iters, NUM_CORES, kernel_name, ridge, band_factor , light = False, print_results = False, null = False):
+    if null:
+        Xpd, Ypd = Xpd, Xpd
+        # Xpd, Ypd = pd.concat([Xpd, Ypd], ignore_index=True), pd.concat([Xpd, Ypd], ignore_index=True)
+        # Xpd = Xpd.sample(frac=1).reset_index(drop=True)
+        # Ypd = Xpd.sample(frac=1).reset_index(drop=True)
     iter_args = [(Xpd.sample(sample_size), Ypd.sample(sample_size),
                    num_permutations, kernel_name, ridge, band_factor, light) for _ in range(N_iters)]
     out = Parallel(n_jobs=NUM_CORES)(delayed(run_fast)(*args) for args in iter_args)

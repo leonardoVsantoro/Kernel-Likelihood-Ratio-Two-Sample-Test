@@ -217,7 +217,7 @@ def get_tableH0(df_out, outname, iterable):
 
 
 
-def get_table_real(file):
+def get_table_real(file, null =False):
     df = pd.read_csv(f'../out/real/{file}.csv').rename(columns={'rejection_rate': 'rejection rate', 'sample_size' : 'sample size'})
     folder = '../out/tables/'
     tex_filename = os.path.join(folder, f'{file}.tex')
@@ -246,8 +246,9 @@ def get_table_real(file):
         for test, rate in zip(methods, rates):
             err = (np.sqrt(rate * (1-rate) / 72)*1.65).round(3)
             value = f'{rate:.2f} $\\pm$ {err:.2f}'
-            if np.isclose(rate, max_rate):
-                value = r'\textbf{' + value + '}'
+            if not null:
+                if np.isclose(rate, max_rate):
+                    value = r'\textbf{' + value + '}'
             values.append(value)
         latex_lines.append(f'{ix} & ' + ' & '.join(values) + r' \\')
     latex_lines.append(r'\hline')
@@ -262,6 +263,8 @@ def get_table_real(file):
             os.remove(f)
     im = Image.open(png_filename)
     crop_box = (280, 280, 1880, 640) 
+    if file == 'cifar' or file == 'cifar-null':
+        crop_box = (280, 280, 1880, 700)
     im_cropped = im.crop(crop_box)
     im_cropped.save(png_filename)
     return None
