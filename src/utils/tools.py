@@ -1,6 +1,25 @@
 from src.modules import *
 from src.modules import *
 
+def regularize_to_condition_number(A, max_condition_number=1e9):
+    """
+    Regularizes symmetric PSD matrix A by adding alpha * I
+    so that its condition number is at most max_condition_number.
+    """
+    assert A.shape[0] == A.shape[1], "Matrix must be square"
+    
+    eigvals = np.clip( np.linalg.eigvalsh(A), 1e-15, None)  # more stable for symmetric matrices
+    lambda_min = np.min(eigvals)
+    lambda_max = np.max(eigvals)
+    
+    cond = lambda_max / lambda_min
+    if cond <= max_condition_number:
+        return A  # no regularization needed
+    
+    alpha = max(0, (lambda_max - max_condition_number * lambda_min) / (max_condition_number - 1))
+    
+    return A + alpha * np.eye(A.shape[0])
+
 def get_mvecs_X_Y(kxx, kxy, kyy):
     kyx = kxy.T
     n = kxx.shape[0]
@@ -9,7 +28,7 @@ def get_mvecs_X_Y(kxx, kxy, kyy):
     mX = np.sum( np.concatenate([kxy, kyy]), axis=1, keepdims=True)/m
     return mX, mY
 
-def get_Smats_X_Y(kxx, kxy, kyy):
+def get_Smats_X_Y(kxx, kxy, kyy, max_cond_number = 1e9):
     kyx = kxy.T
     n = kxx.shape[0]
     m = kyy.shape[0]
@@ -17,6 +36,8 @@ def get_Smats_X_Y(kxx, kxy, kyy):
     KmatY = np.concatenate([kxy, kyy])
     SX = KmatX @ (KmatX.T)/n 
     SY = KmatY @ (KmatY.T)/m 
+    SX = regularize_to_condition_number(SX, max_condition_number=max_cond_number)
+    SY = regularize_to_condition_number(SY, max_condition_number=max_cond_number)
     return SX, SY
 
 def get_Cmat(kernel_matrix):

@@ -4,9 +4,9 @@
 This repository contains code for **Kernel Likelihood Ratio (KLR) Two-Sample Tests**, a statistical method for comparing two samples to determine whether they come from the same distribution.
 
 * [Santoro, Waghmare and Panaretos (2025) "From Two Sample Testing to Singular Gaussian Discrimination"](https://arxiv.org/abs/2505.04613)
-* [Santoro, Waghmare and Panaretos (2025) "Likelihood Ratio Tests via Kernel Embeddings]()
+* [Santoro, Waghmare and Panaretos (2025) "Likelihood Ratio Tests via Kernel Embeddings](https://arxiv.org/abs/2508.07982)
 
-The approach leverages **kernel embeddings** of distributions to construct **regularized likelihood ratio statistics**.
+The approach leverages **kernel embeddings** of distributions to construct **regularized likelihood ratio statistics**. 
 The implementation adaptively selects the kernel bandwith and regularisation ridge.
 
 > ⚠ **Work in progress:**
@@ -34,7 +34,6 @@ The implementation of the Regularized Kernel Likelihood Ratio Test and related k
 Creates a **test class** for one of the following methods:
 * `'KLR'`: **Kernel Likelihood Ratio**
 * `'KLR-0'`: **Centered KLR**
-* `'KCM'`: Kernel Cameron-Martin test
 
 or one of the following known methods:
 
@@ -43,9 +42,7 @@ or one of the following known methods:
 * `'SpecReg-MMD'`: Spectral Regularized MMD
 
 
-### 🧫 Test Class Interface
-
-Each test class returned by the factory has the following interface:
+### 🧫 Sample code
 
 ```python
 test = KernelTwoSampleTest('KLR')(X, Y)
@@ -111,3 +108,5 @@ This will:
 * Generate synthetic data from two (identical) distributions
 * apply KLR test, compare it to known methods (AggMMD, Spec-Reg-MMD, FR, HT, ...)
 * output p-value for each test 
+
+The `paper/` directory contains reproducible scripts for generating the figures and results reported in the associated papers. For questions, please open an issue or contact me.
